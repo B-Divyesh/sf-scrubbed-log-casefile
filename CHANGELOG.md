@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-08-28
+
+- Add `casefile inspect` for manifest review and safe temporary extraction.
+- Give browser demo cases fresh in-memory salts and a phone-first ready result.
+- Expand claim tests across privacy, routing, reconnect, tokens, and manifests.
+- Rewrite public copy and terminology from the second adversarial review.
+
 ## 0.1.2 - 2026-08-28
 
 - Add direct AES-256, password-handling, exact-exit-code, and complete JSON-mode regressions.

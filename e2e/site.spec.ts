@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync, rmSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { basename, dirname } from 'node:path';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -11,23 +11,37 @@ test('cold first screen names engineers and has one sample-data action', async (
   await expect(page.locator('.lede')).toContainText('engineers');
   await expect(page.locator('.hero .button')).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toBeVisible();
+  for (const fact of await page.locator('.trust-strip li').all()) {
+    const box = await fact.boundingBox();
+    expect(box?.y ?? Infinity).toBeGreaterThanOrEqual(0);
+    expect((box?.y ?? Infinity) + (box?.height ?? 0)).toBeLessThanOrEqual(844);
+  }
 });
 
-test('@claim:browser-local demo scrubs input without sending or saving it and loads no tracking resources', async ({ page }) => {
+test('@claim:browser-local landing and demo scrub without sending or saving input and every route loads no tracking resources', async ({ page }) => {
   const requests: { url: string; postData: string | null }[] = [];
   page.on('request', (request) => requests.push({ url: request.url(), postData: request.postData() }));
+  const landingSentinel = 'landing-private-sentinel-9f1e@example.com';
+  await page.goto('/');
+  await page.locator('#raw-log').fill(`email=${landingSentinel} password=landing-secret-9f1e`);
+  await page.getByRole('button', { name: 'Scrub this fragment' }).click();
+  await expect(page.locator('#scrubbed-output')).not.toContainText(landingSentinel);
+
   await page.goto('/demo/');
   await expect(page).toHaveTitle('Demo — Scrubbed Log Casefile');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await expect(page.locator('#scrubbed-output')).toContainText('<SECRET:');
   await expect(page.locator('#scrubbed-output')).not.toContainText('json-demo-password');
-  const sentinel = 'casefile-private-sentinel-9f1e@example.com';
-  await page.locator('#raw-log').fill(`email=${sentinel}`);
+  const demoSentinel = 'demo-private-sentinel-7a2c@example.com';
+  await page.locator('#raw-log').fill(`email=${demoSentinel} password=demo-secret-7a2c`);
   await page.getByRole('button', { name: 'Scrub this fragment' }).click();
-  await expect(page.locator('#scrubbed-output')).not.toContainText(sentinel);
+  await expect(page.locator('#scrubbed-output')).not.toContainText(demoSentinel);
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.locator('#raw-log')).toHaveValue(/ria@example\.com/);
-  expect(await page.evaluate(async (value) => {
+
+  for (const route of ['/', '/demo/', '/privacy/', '/terms/', '/404.html']) await page.goto(route);
+  const sentinels = [landingSentinel, demoSentinel, 'landing-secret-9f1e', 'demo-secret-7a2c'];
+  expect(await page.evaluate(async (values) => {
     const cacheContents = await Promise.all((await caches.keys()).map(async (name) => {
       const cache = await caches.open(name);
       return Promise.all((await cache.keys()).map(async (request) => (await cache.match(request))?.text() ?? ''));
@@ -36,16 +50,36 @@ test('@claim:browser-local demo scrubs input without sending or saving it and lo
       local: localStorage.length,
       session: sessionStorage.length,
       databases: await indexedDB.databases(),
-      cachedSentinel: cacheContents.flat().some((body) => body.includes(value)),
+      cachedSentinel: cacheContents.flat().some((body) => values.some((value) => body.includes(value))),
     };
-  }, sentinel)).toEqual({ local: 0, session: 0, databases: [], cachedSentinel: false });
+  }, sentinels)).toEqual({ local: 0, session: 0, databases: [], cachedSentinel: false });
   expect(requests.every((request) => new URL(request.url).origin === 'http://127.0.0.1:4173')).toBe(true);
-  expect(requests.some((request) => request.url.includes(sentinel) || request.postData?.includes(sentinel))).toBe(false);
+  expect(requests.some((request) => sentinels.some((value) => request.url.includes(value) || request.postData?.includes(value)))).toBe(false);
+});
 
-  const privacyRequests: string[] = [];
-  page.on('request', (request) => privacyRequests.push(request.url()));
-  await page.goto('/privacy/');
-  expect(privacyRequests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+test('@claim:browser-redaction browser demo replaces every stated class, correlates repeats, and uses a fresh case salt', async ({ page, context }) => {
+  const input = 'email=same@example.com again=same@example.com ip=10.9.8.7 password=browser-secret Authorization: Bearer browser-bearer-123 jwt=eyJabcdefgh.abcdefgh.abcdefgh';
+  await page.goto('/demo/');
+  await page.locator('#raw-log').fill(input);
+  await page.getByRole('button', { name: 'Scrub this fragment' }).click();
+  const first = await page.locator('#scrubbed-output').textContent() ?? '';
+  for (const value of ['same@example.com', '10.9.8.7', 'browser-secret', 'browser-bearer-123', 'eyJabcdefgh.abcdefgh.abcdefgh']) expect(first).not.toContain(value);
+  expect(first).toMatch(/<EMAIL:[A-F0-9]{8}>/);
+  expect(first).toMatch(/<IPV4:[A-F0-9]{8}>/);
+  expect(first).toMatch(/<SECRET:[A-F0-9]{8}>/);
+  expect(first).toMatch(/<AUTH:[A-F0-9]{8}>/);
+  expect(first).toMatch(/<JWT:[A-F0-9]{8}>/);
+  const firstEmails = first.match(/<EMAIL:[A-F0-9]{8}>/g) ?? [];
+  expect(firstEmails).toHaveLength(2);
+  expect(new Set(firstEmails).size).toBe(1);
+
+  const freshPage = await context.newPage();
+  await freshPage.goto('/demo/');
+  await freshPage.locator('#raw-log').fill(input);
+  await freshPage.getByRole('button', { name: 'Scrub this fragment' }).click();
+  const second = await freshPage.locator('#scrubbed-output').textContent() ?? '';
+  expect(second.match(/<EMAIL:[A-F0-9]{8}>/)?.[0]).not.toBe(firstEmails[0]);
+  await freshPage.close();
 });
 
 test('@claim:license-storage saves a returned license locally and verifies it only with Sociobot', async ({ page }) => {
@@ -66,6 +100,38 @@ test('@claim:license-storage saves a returned license locally and verifies it on
     verdict: JSON.parse(localStorage.getItem('sb_license_verdict:scrubbed-log-casefile') ?? '{}').valid,
   }))).toEqual({ license: 'fixture-license', verdict: true });
   expect(verificationUrls).toEqual(['https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/verify?license=fixture-license']);
+  expect(await page.evaluate(() => {
+    localStorage.clear();
+    return [localStorage.getItem('sb_license:scrubbed-log-casefile'), localStorage.getItem('sb_license_verdict:scrubbed-log-casefile')];
+  })).toEqual([null, null]);
+});
+
+test('@claim:license-reconnect reconnecting resumes verification of a saved license', async ({ page, context }) => {
+  const endpoint = 'https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/verify?license=reconnect-license';
+  const calls: string[] = [];
+  await page.route(endpoint, async (route) => {
+    calls.push(route.request().url());
+    await route.fulfill({
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': 'http://127.0.0.1:4173' },
+      body: JSON.stringify({ valid: true, reason: 'ok' }),
+    });
+  });
+  await page.goto('/');
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  await page.evaluate(() => {
+    localStorage.setItem('sb_license:scrubbed-log-casefile', 'reconnect-license');
+    localStorage.setItem('sb_license_verdict:scrubbed-log-casefile', JSON.stringify({ valid: false, checkedAt: 0 }));
+  });
+  await context.setOffline(true);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#offline-bar')).toBeVisible();
+  expect(calls).toEqual([]);
+  await context.setOffline(false);
+  await expect.poll(() => calls.length).toBe(1);
+  await expect(page.locator('#license-status')).toContainText('active');
+  expect(calls).toEqual([endpoint]);
 });
 
 test('@claim:offline-reload reloads the interactive demo without HTTP cache', async ({ page, context }) => {
@@ -99,9 +165,6 @@ test('keyboard, 200% text, touch targets, and accessibility pass at 390px', asyn
   await expect(page.locator('.skip-link')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#main')).toBeFocused();
-  await page.evaluate(() => document.documentElement.classList.add('text-scale-200'));
-  const dimensions = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
-  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
   for (const link of await page.locator('footer nav a').all()) {
     expect((await link.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -110,6 +173,9 @@ test('keyboard, 200% text, touch targets, and accessibility pass at 390px', asyn
     expect((await link.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
   }
+  await page.evaluate(() => document.documentElement.classList.add('text-scale-200'));
+  const dimensions = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
@@ -135,23 +201,41 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 
 }
 
 test('the ?demo=1 entry point opens the isolated demo with its banner and reset control', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?demo=1');
   await expect(page).toHaveURL('/demo/');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  const readyBounds = await page.locator('#demo-ready-output').boundingBox();
+  const summaryBounds = await page.locator('#demo-ready-summary').boundingBox();
+  expect(await page.locator('#demo-ready-output').textContent()).toMatch(/<EMAIL:[A-F0-9]{8}>/);
+  expect(await page.locator('#demo-ready-output').textContent()).toMatch(/<SECRET:[A-F0-9]{8}>/);
+  expect((readyBounds?.y ?? Infinity) + (readyBounds?.height ?? 0)).toBeLessThanOrEqual(844);
+  expect((summaryBounds?.y ?? Infinity) + (summaryBounds?.height ?? 0)).toBeLessThanOrEqual(844);
 });
 
 test('normal routes keep navigation, announce the destination, and focus its h1 on forward and back', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('header nav a')).toHaveText(['Demo', 'How it works', 'Install', 'Privacy']);
+  await page.locator('footer').getByRole('link', { name: 'Terms' }).click();
+  await expect(page).toHaveURL('/terms/');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-announcer')).toContainText('Terms — Scrubbed Log Casefile');
+  await page.locator('.wordmark').click();
+  await expect(page).toHaveURL('/');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-announcer')).toContainText('Scrubbed Log Casefile — scrub logs before sharing');
   await page.locator('header').getByRole('link', { name: 'Privacy' }).click();
   await expect(page).toHaveURL('/privacy/');
   await expect(page.locator('h1')).toBeFocused();
   await expect(page.locator('#route-announcer')).toContainText('Privacy — Scrubbed Log Casefile');
-  await page.goBack();
-  await expect(page).toHaveURL('/');
+  await page.locator('footer').getByRole('link', { name: 'Terms' }).click();
+  await expect(page).toHaveURL('/terms/');
   await expect(page.locator('h1')).toBeFocused();
-  await expect(page.locator('#route-announcer')).toContainText('Scrubbed Log Casefile — scrub logs before sharing');
+  await page.goBack();
+  await expect(page).toHaveURL('/privacy/');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-announcer')).toContainText('Privacy — Scrubbed Log Casefile');
 });
 
 for (const path of ['/', '/demo/', '/privacy/', '/terms/', '/404.html']) {
@@ -177,7 +261,7 @@ test('unknown routes return the designed 404 response', async ({ page }) => {
   const response = await page.goto('/not-a-real-casefile-route');
   expect(response?.status()).toBe(404);
   await expect(page).toHaveTitle('Page not found — Scrubbed Log Casefile');
-  await expect(page.locator('h1')).toHaveText('That case is not here.');
+  await expect(page.locator('h1')).toHaveText('That page is not here.');
 });
 
 test('deployment policy declares security, cache, MIME, and 404 behavior', () => {
@@ -213,7 +297,7 @@ test('@claim:team-policy-pack cached valid license downloads four policy starter
     'Name the systems and log sources this policy covers.',
     'Run the policy against representative incident logs before adopting it.',
     'Review false positives and custom values with the team that owns them.',
-    'Check the value-free manifest and share the archive password separately.',
+    'Check the manifest and share the casefile password separately.',
   ]);
   expect(pack.note).toContain('No rule set guarantees complete detection');
   await expect(page.locator('#buy-link')).toHaveAttribute('href', 'https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout');
@@ -221,7 +305,7 @@ test('@claim:team-policy-pack cached valid license downloads four policy starter
 
 test('@claim:cli-recording landing page includes the self-hosted real CLI demo recording', async ({ page, request }) => {
   await page.goto('/');
-  const recording = page.getByRole('img', { name: 'Terminal recording of casefile demo creating an encrypted sample archive' });
+  const recording = page.getByRole('img', { name: 'Terminal recording of casefile demo creating an encrypted sample casefile' });
   await expect(recording).toHaveAttribute('src', '/assets/casefile-demo.svg');
   expect((await request.get('/assets/casefile-demo.svg')).status()).toBe(200);
   const transcript = execFileSync('cargo', ['run', '--quiet', '--', 'demo'], { encoding: 'utf8' });
@@ -232,12 +316,28 @@ test('@claim:cli-recording landing page includes the self-hosted real CLI demo r
   rmSync(dirname(summary?.[1] ?? ''), { recursive: true, force: true });
 });
 
-test('@claim:cli-demo bundled CLI demo creates sample input and an archive', () => {
+test('@claim:cli-demo bundled CLI demo creates a new sample directory and prints every review detail', () => {
   const body = JSON.parse(execFileSync('cargo', ['run', '--quiet', '--', 'demo', '--json'], { encoding: 'utf8' }));
   expect(body.ok).toBe(true);
   expect(body.files_written).toBe(2);
   expect(body.redactions).toBeGreaterThanOrEqual(7);
-  rmSync(new URL(`file://${body.output}`).pathname.split('/sample.casefile.zip')[0], { recursive: true });
+  expect(body.password).toBe('casefile-demo-password');
+  expect(basename(body.output)).toBe('sample.casefile.zip');
+  expect(dirname(body.output)).toBe(dirname(body.sample_directory));
+  expect(basename(dirname(body.output))).toMatch(/^casefile-demo-/);
+  expect(existsSync(body.output)).toBe(true);
+  expect(existsSync(body.sample_directory)).toBe(true);
+  rmSync(dirname(body.output), { recursive: true });
+
+  const human = execFileSync('cargo', ['run', '--quiet', '--', 'demo'], { encoding: 'utf8' });
+  const output = human.match(/^Demo casefile: (.+)$/m)?.[1] ?? '';
+  const sample = human.match(/^Sample input: (.+)$/m)?.[1] ?? '';
+  expect(output).not.toBe('');
+  expect(sample).not.toBe('');
+  expect(human).toContain('Casefile password: casefile-demo-password');
+  expect(human).toMatch(/Sealed 2 files after \d+ redactions/);
+  expect(dirname(output)).toBe(dirname(sample));
+  rmSync(dirname(output), { recursive: true });
 });
 
 function expectRustContract(testName: string) {
@@ -266,7 +366,13 @@ test('@claim:custom-rules observable CLI contract passes', () => {
   expectRustContract('documented_custom_policy_replaces_only_the_named_value_capture');
 });
 test('@claim:stable-tokens observable CLI contract passes', () => {
-  expectRustContract('repeated_values_get_stable_tokens');
+  expectRustContract('separate_cli_casefiles_use_fresh_salts_and_stable_tokens');
+});
+test('@claim:manifest-contents observable CLI contract passes', () => {
+  expectRustContract('manifest_has_salted_fingerprints_rule_names_counts_and_no_values');
+});
+test('@claim:inspect-casefile observable CLI contract passes', () => {
+  expectRustContract('inspect_displays_manifest_and_extracts_scrubbed_files_safely');
 });
 test('@claim:atomic-output observable CLI contract passes', () => {
   expectRustContract('existing_output_is_unchanged_and_failed_pack_leaves_no_temporary_archive');

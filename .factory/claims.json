@@ -1,45 +1,66 @@
 [
   {
     "id": "browser-local",
-    "claim": "The browser demo sends and saves no scrub input, and the site loads no third-party tracking resources.",
+    "claim": "Landing and demo scrubbing send and save no scrub input, and every public route loads no third-party tracking resources.",
     "where": "landing preview, demo banner, privacy page, README",
     "test": "npm run test:e2e -- --grep '@claim:browser-local'",
-    "sandbox": "fresh browser context; record demo and privacy requests; enter a unique sentinel, scrub it, reset the sample; assert no URL or request body contains it, only same-origin resources load, and local/session/IndexedDB/Cache Storage contain no sentinel"
+    "sandbox": "fresh browser context; scrub distinct sentinels on landing and demo; visit every public route; assert no URL, body, browser store, IndexedDB database, or Cache Storage response contains input and every request is same-origin"
+  },
+  {
+    "id": "browser-redaction",
+    "claim": "The browser demo replaces emails, IPv4 addresses, credentials, bearer tokens, and JWTs; repeated values correlate only within one fresh demo case.",
+    "where": "landing preview and demo",
+    "test": "npm run test:e2e -- --grep '@claim:browser-redaction'",
+    "sandbox": "fresh browser pages; submit every stated class and a repeated email; assert raw values are absent, typed replacements exist, repeats match within one page, and a fresh page uses a different token"
   },
   {
     "id": "license-storage",
-    "claim": "A returned license is saved locally and verified with Sociobot.",
+    "claim": "A returned license is saved locally, removable through site-storage clearing, and verified with Sociobot.",
     "where": "privacy page",
     "test": "npm run test:e2e -- --grep '@claim:license-storage'",
-    "sandbox": "fresh browser context; intercept the documented Sociobot verification endpoint; load a fixture return token; assert query removal, local token/verdict storage, and the one expected endpoint"
+    "sandbox": "fresh browser context; intercept the documented Sociobot verification endpoint; load a fixture return token; assert query removal, local token/verdict storage, the one expected endpoint, and removal after clearing local storage"
+  },
+  {
+    "id": "license-reconnect",
+    "claim": "Reconnecting resumes verification of a saved license.",
+    "where": "landing offline notice",
+    "test": "npm run test:e2e -- --grep '@claim:license-reconnect'",
+    "sandbox": "prime the page; seed a stale saved license; reload offline; reconnect; fulfill the fixture Sociobot endpoint; assert exactly one verification and an active verdict"
   },
   {
     "id": "offline-reload",
     "claim": "The demo works offline after the first visit.",
-    "where": "landing facts, README",
+    "where": "landing facts, privacy page, README",
     "test": "npm run test:e2e -- --grep '@claim:offline-reload'",
-    "sandbox": "fresh browser context; activate service worker; clear HTTP cache; set offline; reload and scrub new input"
+    "sandbox": "fresh browser context; activate service worker; clear HTTP cache; set offline; reload the demo and scrub new input"
   },
   {
     "id": "cli-demo",
-    "claim": "casefile demo creates a real casefile from two bundled sample files.",
+    "claim": "casefile demo creates two bundled sample files and a real casefile in a new temporary directory, then prints both paths and its password.",
     "where": "landing install, README",
     "test": "npm run test:e2e -- --grep '@claim:cli-demo'",
-    "sandbox": "run the CLI demo from a clean checkout; assert two inputs, at least seven redactions, and an output archive"
+    "sandbox": "run JSON and human CLI demos from a clean checkout; assert two files, at least seven redactions, unique temporary roots, existing paths, password, and every printed detail"
   },
   {
     "id": "credential-redaction",
     "claim": "Built-in rules replace private keys, URL and header credentials, quoted assignments, JWTs, emails, and IPv4 addresses.",
     "where": "landing, README",
     "test": "npm run test:e2e -- --grep '@claim:credential-redaction'",
-    "sandbox": "pack representative config; decrypt entry and manifest; assert every seeded built-in class is absent and counted"
+    "sandbox": "pack representative config; decrypt the entry and manifest; assert every seeded built-in class is absent and counted"
   },
   {
     "id": "encrypted-casefile",
-    "claim": "The CLI writes encrypted ZIP entries and a value-free redaction manifest.",
+    "claim": "The CLI writes encrypted ZIP entries and a redaction manifest without matched values.",
     "where": "landing workflow and pricing, README",
     "test": "npm run test:e2e -- --grep '@claim:encrypted-casefile'",
-    "sandbox": "pack seeded input; decrypt file and manifest with the user password; assert raw values are absent"
+    "sandbox": "pack seeded input; decrypt the file and manifest with the user password; assert raw values are absent"
+  },
+  {
+    "id": "manifest-contents",
+    "claim": "The manifest records a salted fingerprint for each file, rule names, and hit counts without matched values.",
+    "where": "landing workflow, README",
+    "test": "npm run test:e2e -- --grep '@claim:manifest-contents'",
+    "sandbox": "pack one file with three seeded classes; decrypt and parse the manifest; assert its per-file salted SHA-256 fingerprint, rule inventory, exact counts, and absence of every seeded value"
   },
   {
     "id": "aes-256",
@@ -50,14 +71,14 @@
   },
   {
     "id": "password-env",
-    "claim": "The CLI reads archive passwords from an environment variable, not a password command-line argument.",
+    "claim": "The CLI reads casefile passwords from an environment variable, not a password command-line argument.",
     "where": "landing install, README",
     "test": "npm run test:e2e -- --grep '@claim:password-env'",
     "sandbox": "inspect pack help; assert --password-env exists and no --password argument is accepted"
   },
   {
     "id": "machine-json",
-    "claim": "--json returns a machine-readable object for success, validation, and parse errors.",
+    "claim": "pack --json returns a machine-readable object for success, validation, and parse errors.",
     "where": "README",
     "test": "npm run test:e2e -- --grep '@claim:machine-json'",
     "sandbox": "invoke successful, validation-failure, and parse-failure pack commands with --json; parse each stdout object and assert empty stderr"
@@ -74,21 +95,28 @@
     "claim": "Project-owned JSON rules can replace a named value while preserving its context.",
     "where": "landing pricing, README",
     "test": "npm run test:e2e -- --grep '@claim:custom-rules'",
-    "sandbox": "pack sample with documented tenant rule; decrypt and assert only the named capture changed"
+    "sandbox": "pack a sample with the documented tenant rule; decrypt it and assert only the named capture changed"
   },
   {
     "id": "stable-tokens",
-    "claim": "Repeated values receive the same case-scoped token, while another case uses a different token.",
+    "claim": "Repeated values receive the same replacement within one CLI casefile, while another casefile uses a different replacement.",
     "where": "landing workflow, README",
     "test": "npm run test:e2e -- --grep '@claim:stable-tokens'",
-    "sandbox": "scrub repeated and distinct emails in two cases; compare same-case and cross-case tokens"
+    "sandbox": "run casefile pack twice on one file with repeated and distinct emails; decrypt both casefiles; compare same-file and cross-casefile tokens and inspect each token-scope statement"
   },
   {
     "id": "atomic-output",
-    "claim": "A failed pack preserves an existing output and leaves no temporary archive.",
+    "claim": "A failed pack preserves an existing casefile and leaves no temporary archive.",
     "where": "landing install, README",
     "test": "npm run test:e2e -- --grep '@claim:atomic-output'",
-    "sandbox": "seed an existing archive; run pack without --force; compare bytes and directory entries"
+    "sandbox": "seed an existing casefile; run pack without --force; compare bytes and directory entries"
+  },
+  {
+    "id": "inspect-casefile",
+    "claim": "casefile inspect displays the manifest and can extract scrubbed files into a new temporary review directory.",
+    "where": "landing install, README",
+    "test": "npm run test:e2e -- --grep '@claim:inspect-casefile'",
+    "sandbox": "pack a nested sample; inspect without extraction; extract with the password; assert safe nested paths and scrubbed contents; assert a wrong password fails before extraction"
   },
   {
     "id": "single-binary",
@@ -116,6 +144,6 @@
     "claim": "The landing page includes a self-hosted recording of the real casefile demo command.",
     "where": "landing install",
     "test": "npm run test:e2e -- --grep '@claim:cli-recording'",
-    "sandbox": "load the landing page; assert the labelled SVG recording is served from the same origin"
+    "sandbox": "load the landing page; assert the labelled SVG recording is served from the same origin and its file/redaction summary matches a fresh real command"
   }
 ]

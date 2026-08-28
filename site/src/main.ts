@@ -1,6 +1,6 @@
 import './styles.css';
 import './route-focus';
-import { scrubPreview } from './demo';
+import { createCaseSalt, scrubPreview } from './demo';
 
 const slug = 'scrubbed-log-casefile';
 const apiBase = 'https://api.sociobot.in/api/v1';
@@ -11,6 +11,7 @@ const rawLog = byId<HTMLTextAreaElement>('raw-log');
 const output = byId<HTMLElement>('scrubbed-output');
 const summary = byId<HTMLElement>('demo-summary');
 const copyOutput = byId<HTMLButtonElement>('copy-output');
+const previewSalt = createCaseSalt();
 
 // Keep the catalog's ?demo=1 entry point as a one-click shortcut while the
 // isolated, in-memory demo remains a real URL with its own title and banner.
@@ -26,11 +27,11 @@ byId<HTMLButtonElement>('scrub-button').addEventListener('click', () => {
     rawLog.focus();
     return;
   }
-  const result = scrubPreview(rawLog.value);
+  const result = scrubPreview(rawLog.value, previewSalt);
   output.textContent = result.text;
   const total = Object.values(result.counts).reduce((sum, count) => sum + count, 0);
   const details = Object.entries(result.counts).map(([name, count]) => `${name}: ${count}`).join(' · ');
-  summary.textContent = total ? `${total} sensitive value${total === 1 ? '' : 's'} replaced · ${details}` : 'No built-in pattern matched. Add a custom CLI policy for project-specific values.';
+  summary.textContent = total ? `${total} sensitive value${total === 1 ? '' : 's'} replaced · ${details}` : 'No built-in rule matched. Add a project rule in a policy file.';
   copyOutput.disabled = false;
 });
 
@@ -55,7 +56,6 @@ byId<HTMLButtonElement>('copy-command').addEventListener('click', (event) => cop
 
 const offlineBar = byId<HTMLElement>('offline-bar');
 function updateConnection() { offlineBar.hidden = navigator.onLine; }
-window.addEventListener('online', updateConnection);
 window.addEventListener('offline', updateConnection);
 updateConnection();
 
@@ -70,7 +70,7 @@ function readVerdict(): Verdict | null {
 }
 async function verifyLicense(token: string, foreground = false) {
   if (!navigator.onLine) {
-    if (foreground) setUnlocked(Boolean(readVerdict()?.valid), 'Offline. The saved verdict is unchanged; verification will resume when connected.');
+    if (foreground) setUnlocked(Boolean(readVerdict()?.valid), 'Offline. Reconnect to verify the saved license.');
     return;
   }
   if (foreground) byId('license-status').textContent = 'Verifying license…';
@@ -84,6 +84,13 @@ async function verifyLicense(token: string, foreground = false) {
     setUnlocked(Boolean(readVerdict()?.valid), 'Could not reach license verification. The saved verdict is unchanged; try again when connected.');
   }
 }
+
+function resumeAfterReconnect() {
+  updateConnection();
+  const token = localStorage.getItem(licenseKey);
+  if (token) void verifyLicense(token);
+}
+window.addEventListener('online', resumeAfterReconnect);
 
 const params = new URLSearchParams(window.location.search);
 const returnedLicense = params.get('license');
@@ -121,7 +128,7 @@ byId<HTMLButtonElement>('download-pack').addEventListener('click', () => {
       'Name the systems and log sources this policy covers.',
       'Run the policy against representative incident logs before adopting it.',
       'Review false positives and custom values with the team that owns them.',
-      'Check the value-free manifest and share the archive password separately.',
+      'Check the manifest and share the casefile password separately.',
     ],
     note: 'Review and tailor these starters before use. No rule set guarantees complete detection.',
   }, null, 2);

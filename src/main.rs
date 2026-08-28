@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand, error::ErrorKind};
 use rand::RngCore;
 use scrubbed_log_casefile::{Policy, PolicyFile, Redactor};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashSet};
 use std::env;
@@ -19,7 +19,7 @@ use zip::write::SimpleFileOptions;
     name = "casefile",
     version,
     about = "Build a locally scrubbed, encrypted incident casefile",
-    long_about = "Scrub logs, traces, and configuration with stable per-casefile tokens, then package them with a value-free manifest in an AES-256 encrypted ZIP. No data leaves this machine."
+    long_about = "Scrub logs, traces, and configuration. Repeated values keep one replacement within each casefile. The result is an AES-256 encrypted ZIP with rule names and counts, not matched values. The CLI has no network or telemetry client."
 )]
 struct Cli {
     #[command(subcommand)]
@@ -32,6 +32,8 @@ enum Command {
     Pack(PackArgs),
     /// Build a casefile from bundled sample incident data in a temporary directory
     Demo(DemoArgs),
+    /// Read a casefile manifest and optionally extract scrubbed files for review
+    Inspect(InspectArgs),
 }
 
 #[derive(Args)]
@@ -51,7 +53,7 @@ struct PackArgs {
     #[arg(short, long, value_name = "FILE")]
     output: PathBuf,
 
-    /// Read the archive password from this environment variable
+    /// Read the casefile password from this environment variable
     #[arg(long, default_value = "CASEFILE_PASSWORD", value_name = "NAME")]
     password_env: String,
 
@@ -63,9 +65,28 @@ struct PackArgs {
     #[arg(long)]
     no_default_rules: bool,
 
-    /// Replace an existing output archive
+    /// Replace an existing output casefile
     #[arg(long)]
     force: bool,
+
+    /// Emit one machine-readable result object
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Args)]
+struct InspectArgs {
+    /// Casefile ZIP to inspect
+    #[arg(value_name = "CASEFILE")]
+    archive: PathBuf,
+
+    /// Read the casefile password from this environment variable
+    #[arg(long, default_value = "CASEFILE_PASSWORD", value_name = "NAME")]
+    password_env: String,
+
+    /// Extract scrubbed files into a new temporary review directory
+    #[arg(long)]
+    extract: bool,
 
     /// Emit one machine-readable result object
     #[arg(long)]
@@ -120,19 +141,28 @@ struct DemoSummary {
 }
 
 #[derive(Serialize)]
+struct InspectSummary {
+    ok: bool,
+    archive: String,
+    files: Vec<String>,
+    manifest: serde_json::Value,
+    extracted_to: Option<String>,
+}
+
+#[derive(Deserialize, Serialize)]
 struct Manifest {
-    format: &'static str,
-    version: &'static str,
+    format: String,
+    version: String,
     created_unix_seconds: u64,
-    statement: &'static str,
-    token_scope: &'static str,
+    statement: String,
+    token_scope: String,
     rules: Vec<String>,
     rule_hits: BTreeMap<String, u64>,
     files: Vec<FileRecord>,
     skipped: Vec<SkippedRecord>,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct FileRecord {
     path: String,
     source_fingerprint: String,
@@ -141,7 +171,7 @@ struct FileRecord {
     rule_hits: BTreeMap<String, u64>,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 struct SkippedRecord {
     path: String,
     reason: String,
@@ -183,7 +213,139 @@ fn main() -> ExitCode {
     match cli.command {
         Command::Pack(args) => run_pack(args),
         Command::Demo(args) => run_demo(args),
+        Command::Inspect(args) => run_inspect(args),
     }
+}
+
+fn run_inspect(args: InspectArgs) -> ExitCode {
+    let json = args.json;
+    match inspect(args) {
+        Ok(summary) => {
+            if json {
+                println!("{}", serde_json::to_string(&summary).expect("serializable"));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&summary.manifest).expect("serializable")
+                );
+                if let Some(path) = &summary.extracted_to {
+                    eprintln!("Extracted scrubbed files for review to {path}");
+                } else {
+                    eprintln!(
+                        "Manifest read. Run again with --extract to review {} scrubbed file(s).",
+                        summary.files.len()
+                    );
+                }
+            }
+            ExitCode::SUCCESS
+        }
+        Err(error) => print_app_error(error, json),
+    }
+}
+
+fn inspect(args: InspectArgs) -> Result<InspectSummary, AppError> {
+    let password = env::var(&args.password_env).map_err(|_| {
+        AppError::usage(format!(
+            "password environment variable '{}' is not set",
+            args.password_env
+        ))
+    })?;
+    let manifest_bytes = read_casefile_entry(&args.archive, "casefile-manifest.json", &password)?;
+    let manifest: Manifest = serde_json::from_slice(&manifest_bytes)
+        .map_err(|error| AppError::runtime(format!("casefile manifest is invalid: {error}")))?;
+    let files = manifest
+        .files
+        .iter()
+        .map(|record| record.path.clone())
+        .collect::<Vec<_>>();
+    for path in &files {
+        validate_review_path(path)?;
+    }
+
+    let extracted_to = if args.extract {
+        let temporary = tempfile::Builder::new()
+            .prefix("casefile-review-")
+            .tempdir()
+            .map_err(|error| {
+                AppError::runtime(format!("cannot create review directory: {error}"))
+            })?;
+        for path in &files {
+            let destination = temporary.path().join(path);
+            if let Some(parent) = destination.parent() {
+                fs::create_dir_all(parent).map_err(|error| {
+                    AppError::runtime(format!("cannot create review directory: {error}"))
+                })?;
+            }
+            let contents = read_casefile_entry(&args.archive, path, &password)?;
+            let mut options = fs::OpenOptions::new();
+            options.write(true).create_new(true);
+            let mut file = options.open(&destination).map_err(|error| {
+                AppError::runtime(format!(
+                    "cannot extract '{}': {error}",
+                    destination.display()
+                ))
+            })?;
+            file.write_all(&contents).map_err(|error| {
+                AppError::runtime(format!(
+                    "cannot extract '{}': {error}",
+                    destination.display()
+                ))
+            })?;
+        }
+        Some(temporary.keep().display().to_string())
+    } else {
+        None
+    };
+
+    let manifest_value = serde_json::to_value(manifest)
+        .map_err(|error| AppError::runtime(format!("cannot display manifest: {error}")))?;
+    Ok(InspectSummary {
+        ok: true,
+        archive: args.archive.display().to_string(),
+        files,
+        manifest: manifest_value,
+        extracted_to,
+    })
+}
+
+fn read_casefile_entry(
+    archive_path: &Path,
+    name: &str,
+    password: &str,
+) -> Result<Vec<u8>, AppError> {
+    let file = File::open(archive_path).map_err(|error| {
+        AppError::usage(format!(
+            "cannot open casefile '{}': {error}",
+            archive_path.display()
+        ))
+    })?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|error| AppError::runtime(format!("invalid casefile ZIP: {error}")))?;
+    let mut entry = archive
+        .by_name_decrypt(name, password.as_bytes())
+        .map_err(|error| {
+            AppError::runtime(format!("cannot decrypt casefile entry '{name}': {error}"))
+        })?;
+    let mut contents = Vec::new();
+    entry.read_to_end(&mut contents).map_err(|error| {
+        AppError::runtime(format!("cannot read casefile entry '{name}': {error}"))
+    })?;
+    Ok(contents)
+}
+
+fn validate_review_path(path: &str) -> Result<(), AppError> {
+    let candidate = Path::new(path);
+    if path.is_empty()
+        || candidate.is_absolute()
+        || candidate
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
+    {
+        return Err(AppError::runtime(format!(
+            "casefile contains an unsafe review path: '{path}'"
+        )));
+    }
+    Ok(())
 }
 
 fn run_pack(args: PackArgs) -> ExitCode {
@@ -216,7 +378,7 @@ fn run_demo(args: DemoArgs) -> ExitCode {
             } else {
                 println!("Demo casefile: {}", summary.output);
                 println!("Sample input: {}", summary.sample_directory);
-                println!("Archive password: {}", summary.password);
+                println!("Casefile password: {}", summary.password);
                 println!(
                     "Sealed {} files after {} redactions. Nothing was written outside this demo directory.",
                     summary.files_written, summary.redactions
@@ -297,7 +459,7 @@ fn pack(args: PackArgs) -> Result<SuccessSummary, AppError> {
     })?;
     if password.chars().count() < 12 {
         return Err(AppError::usage(
-            "archive password must be at least 12 characters",
+            "casefile password must be at least 12 characters",
         ));
     }
 
@@ -308,7 +470,7 @@ fn pack_with_password(args: PackArgs, password: String) -> Result<SuccessSummary
     validate_output(&args.output, args.force)?;
     if password.chars().count() < 12 {
         return Err(AppError::usage(
-            "archive password must be at least 12 characters",
+            "casefile password must be at least 12 characters",
         ));
     }
     pack_prevalidated(args, password)
@@ -347,7 +509,7 @@ fn pack_prevalidated(args: PackArgs, password: String) -> Result<SuccessSummary,
         ))
     })?;
     let mut temporary = NamedTempFile::new_in(parent)
-        .map_err(|error| AppError::runtime(format!("cannot create temporary archive: {error}")))?;
+        .map_err(|error| AppError::runtime(format!("cannot create temporary casefile: {error}")))?;
 
     let (files, rule_hits, skipped_count) = {
         let mut zip = zip::ZipWriter::new(temporary.as_file_mut());
@@ -410,14 +572,14 @@ fn pack_prevalidated(args: PackArgs, password: String) -> Result<SuccessSummary,
 
         let skipped_count = skipped.len();
         let manifest = Manifest {
-            format: "scrubbed-log-casefile",
-            version: env!("CARGO_PKG_VERSION"),
+            format: "scrubbed-log-casefile".into(),
+            version: env!("CARGO_PKG_VERSION").into(),
             created_unix_seconds: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs(),
-            statement: "Rule-based redaction is not proof that all sensitive data was detected. Review before sharing.",
-            token_scope: "Stable only within this archive; fingerprints and tokens are salted per casefile.",
+            statement: "Rule-based redaction is not proof that all sensitive data was detected. Review before sharing.".into(),
+            token_scope: "Stable only within this casefile; fingerprints and tokens use a fresh salt for each casefile.".into(),
             rules: rule_names,
             rule_hits: totals.clone(),
             files: records,
@@ -578,9 +740,9 @@ fn salted_fingerprint(bytes: &[u8], salt: &[u8; 32]) -> String {
 }
 
 fn zip_error(error: zip::result::ZipError) -> AppError {
-    AppError::runtime(format!("cannot write encrypted archive: {error}"))
+    AppError::runtime(format!("cannot write casefile ZIP: {error}"))
 }
 
 fn io_error(error: std::io::Error) -> AppError {
-    AppError::runtime(format!("cannot write encrypted archive: {error}"))
+    AppError::runtime(format!("cannot write casefile ZIP: {error}"))
 }

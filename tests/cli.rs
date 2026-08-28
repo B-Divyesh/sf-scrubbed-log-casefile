@@ -12,7 +12,9 @@ fn help_explains_the_security_boundary() {
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("No data leaves this machine"));
+        .stdout(predicate::str::contains(
+            "The CLI has no network or telemetry client",
+        ));
 }
 
 #[test]
@@ -422,4 +424,202 @@ fn existing_output_is_unchanged_and_failed_pack_leaves_no_temporary_archive() {
         .code(2);
     assert_eq!(fs::read(&output).unwrap(), b"existing archive bytes");
     assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 2);
+}
+
+fn scrubbed_entry(archive_path: &std::path::Path, entry: &str) -> String {
+    let mut archive = zip::ZipArchive::new(fs::File::open(archive_path).unwrap()).unwrap();
+    let mut text = String::new();
+    archive
+        .by_name_decrypt(entry, TEST_PASSWORD.as_bytes())
+        .unwrap()
+        .read_to_string(&mut text)
+        .unwrap();
+    text
+}
+
+#[test]
+fn separate_cli_casefiles_use_fresh_salts_and_stable_tokens() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("repeated.log");
+    fs::write(
+        &input,
+        "first=same@example.com second=same@example.com other=other@example.com",
+    )
+    .unwrap();
+    let first = temp.path().join("first.zip");
+    let second = temp.path().join("second.zip");
+    for output in [&first, &second] {
+        Command::cargo_bin("casefile")
+            .unwrap()
+            .args([
+                "pack",
+                input.to_str().unwrap(),
+                "--output",
+                output.to_str().unwrap(),
+                "--password-env",
+                "CASEFILE_TEST_PASSWORD",
+            ])
+            .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+            .assert()
+            .success();
+    }
+
+    let first_text = scrubbed_entry(&first, "repeated.log");
+    let second_text = scrubbed_entry(&second, "repeated.log");
+    let values = |text: &str| {
+        text.split_whitespace()
+            .map(|part| part.split('=').nth(1).unwrap().to_owned())
+            .collect::<Vec<_>>()
+    };
+    let first_tokens = values(&first_text);
+    let second_tokens = values(&second_text);
+    assert_eq!(first_tokens[0], first_tokens[1]);
+    assert_ne!(first_tokens[0], first_tokens[2]);
+    assert_eq!(second_tokens[0], second_tokens[1]);
+    assert_ne!(first_tokens[0], second_tokens[0]);
+    for archive_path in [&first, &second] {
+        let manifest = scrubbed_entry(archive_path, "casefile-manifest.json");
+        assert!(manifest.contains("fresh salt for each casefile"));
+    }
+}
+
+#[test]
+fn manifest_has_salted_fingerprints_rule_names_counts_and_no_values() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("incident.log");
+    let output = temp.path().join("casefile.zip");
+    let secrets = ["owner@example.com", "10.24.8.5", "never-share-this"];
+    fs::write(
+        &input,
+        format!(
+            "owner={} ip={} password={}",
+            secrets[0], secrets[1], secrets[2]
+        ),
+    )
+    .unwrap();
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .success();
+
+    let raw = scrubbed_entry(&output, "casefile-manifest.json");
+    let manifest: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    assert_eq!(manifest["files"].as_array().unwrap().len(), 1);
+    let fingerprint = manifest["files"][0]["source_fingerprint"].as_str().unwrap();
+    assert!(fingerprint.starts_with("sha256-salted:"));
+    assert_eq!(fingerprint.len(), "sha256-salted:".len() + 64);
+    assert!(
+        manifest["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|name| name == "email")
+    );
+    assert_eq!(manifest["rule_hits"]["email"], 1);
+    assert_eq!(manifest["rule_hits"]["ipv4"], 1);
+    assert_eq!(manifest["rule_hits"]["credential-assignment"], 1);
+    for secret in secrets {
+        assert!(!raw.contains(secret));
+    }
+}
+
+#[test]
+fn inspect_displays_manifest_and_extracts_scrubbed_files_safely() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_dir = temp.path().join("incident");
+    fs::create_dir(&input_dir).unwrap();
+    fs::write(
+        input_dir.join("app.log"),
+        "user=review@example.com password=do-not-extract",
+    )
+    .unwrap();
+    let output = temp.path().join("review.casefile.zip");
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input_dir.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .success();
+
+    let listed = Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "inspect",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+            "--json",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .output()
+        .unwrap();
+    assert!(listed.status.success());
+    let listed_body: serde_json::Value = serde_json::from_slice(&listed.stdout).unwrap();
+    assert_eq!(listed_body["ok"], true);
+    assert_eq!(
+        listed_body["files"],
+        serde_json::json!(["incident/app.log"])
+    );
+    assert!(listed_body["extracted_to"].is_null());
+    assert_eq!(listed_body["manifest"]["format"], "scrubbed-log-casefile");
+
+    let extracted = Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "inspect",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+            "--extract",
+            "--json",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .output()
+        .unwrap();
+    assert!(extracted.status.success());
+    let extracted_body: serde_json::Value = serde_json::from_slice(&extracted.stdout).unwrap();
+    let review_root = std::path::PathBuf::from(extracted_body["extracted_to"].as_str().unwrap());
+    assert!(
+        review_root
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .starts_with("casefile-review-")
+    );
+    let reviewed = fs::read_to_string(review_root.join("incident/app.log")).unwrap();
+    assert!(!reviewed.contains("review@example.com"));
+    assert!(!reviewed.contains("do-not-extract"));
+    assert!(reviewed.contains("<EMAIL:"));
+    fs::remove_dir_all(review_root).unwrap();
+
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "inspect",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_WRONG_PASSWORD",
+            "--extract",
+            "--json",
+        ])
+        .env("CASEFILE_WRONG_PASSWORD", "wrong password value")
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("casefile entry"));
 }

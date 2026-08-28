@@ -2,10 +2,11 @@
 
 Scrubbed Log Casefile is for engineers escalating a bug. It replaces common
 credentials and identifiers while keeping repeated values useful inside one
-case. The result is an encrypted ZIP with a value-free rule manifest.
+casefile. A casefile is an AES-256 encrypted ZIP. Its manifest lists rule
+names and counts, not matched values.
 
-It is a local CLI, not a log host or complete PII detector. Review every
-casefile before sharing it.
+It is a local CLI, not a log host or complete personal-data detector. Review
+every casefile before sharing it.
 
 ## Try the bundled demo
 
@@ -16,12 +17,18 @@ cargo install --path .
 casefile demo
 ```
 
-The command prints its temporary sample directory, encrypted archive, and demo
-password. The same sample is committed under `examples/incident/`.
+The command creates a new temporary directory. It prints the sample path,
+casefile path, and demo password. The same sample is committed under
+`examples/incident/`.
 
-The browser demo is available at
-<https://scrubbed-log-casefile.sociobot.in/demo/>. It works offline after the
-first visit. Scrub input stays in the tab and is not saved.
+Try the isolated browser sample at
+<https://scrubbed-log-casefile.sociobot.in/?demo=1>. It starts ready, stores
+edits only in memory, and resets without touching license data. Landing and
+demo scrubbing send no input. The demo works offline after the first visit.
+
+The browser rules cover emails, IPv4 addresses, credentials, bearer tokens,
+and JWTs. A fresh in-memory salt keeps repeated values correlated only within
+one demo case.
 
 ## Pack an incident
 
@@ -34,13 +41,28 @@ casefile pack ./incident \
   --password-env CASEFILE_PASSWORD
 ```
 
-The built-in policy covers common private keys, URL credentials,
-authorization headers, credential assignments, JWTs, emails, and IPv4
-addresses. Quoted JSON and YAML credential keys are supported.
+The built-in policy file covers private keys, URL credentials, authorization
+headers, credential assignments, JWTs, emails, and IPv4 addresses. It also
+supports quoted JSON and YAML credential keys.
 
-Repeated values receive the same token inside one casefile. Separate
-casefiles use different salts. Existing output is preserved unless `--force`
-is present, and a failed pack leaves no temporary archive.
+The same value gets the same replacement within one casefile. A second
+casefile uses a fresh salt. A failed pack keeps existing output and leaves no
+partial casefile.
+
+## Review a casefile
+
+Read the manifest before sharing:
+
+```sh
+casefile inspect vendor.casefile.zip \
+  --password-env CASEFILE_PASSWORD
+```
+
+Add `--extract` to write scrubbed files into a new temporary review directory.
+Safe relative paths are preserved. Extraction starts in a new empty directory.
+
+The manifest records one salted fingerprint per file. It also records rule
+names and hit counts without matched values.
 
 ## Add a project rule
 
@@ -61,27 +83,25 @@ A named `value` capture replaces only the sensitive value:
 ```sh
 casefile pack ./incident \
   --policy casefile-policy.json \
-  --output vendor.zip
+  --output vendor.casefile.zip
 ```
 
-`--json` writes one machine-readable success or error object. Exit codes are
-`0` for success, `2` for invalid input, and `1` for a runtime failure.
+`pack --json` writes one machine-readable success or error object. Exit codes
+are `0` for success, `2` for invalid input, and `1` for a runtime failure.
 
 ## Privacy and security limits
 
-The CLI package contains no network or telemetry client. ZIP entries use
-AES-256 encryption with the user-held password. The CLI reads that password
-from an environment variable and does not accept it as a command-line argument. A manifest records file
-fingerprints, rule names, and hit counts without matched values.
+The CLI package contains no network or telemetry client. Every ZIP entry uses
+AES-256 encryption with the user-held password. The CLI accepts that password
+only through an environment variable.
 
-Rules cannot detect every secret or identifier. Inspect the scrub policy and
-send the archive password through a separate channel.
+Rules cannot detect every secret or identifier. Inspect the policy file and
+send the casefile password through a separate channel.
 
 ## Optional team pack
 
 The CLI and safety features remain MIT-licensed. A $19 one-time license adds
-four policy starters for AWS, Kubernetes, PostgreSQL, and HTTP traces, plus a
-team policy review checklist.
+four policy starters and a team review checklist.
 
 ## Develop and verify
 

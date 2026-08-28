@@ -21,8 +21,13 @@ const shouldFocus = (() => {
   } catch { return false; }
 })();
 
-document.querySelectorAll<HTMLAnchorElement>('header nav a').forEach((link) => {
+document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((link) => {
   link.addEventListener('click', () => {
+    const target = new URL(link.href, window.location.href);
+    if (target.origin !== window.location.origin) return;
+    const currentRoute = `${window.location.pathname}${window.location.search}`;
+    const targetRoute = `${target.pathname}${target.search}`;
+    if (targetRoute === currentRoute) return;
     try { sessionStorage.setItem(focusMarker, '1'); } catch { /* storage may be disabled */ }
   });
 });
