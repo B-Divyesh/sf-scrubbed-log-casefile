@@ -8,10 +8,10 @@
   },
   {
     "id": "browser-redaction",
-    "claim": "The browser demo replaces emails, IPv4 addresses, credentials, bearer tokens, and JWTs; repeated values correlate only within one fresh demo case.",
+    "claim": "The browser demo replaces emails, IPv4 addresses, credentials, bearer tokens, and JWTs; repeated values match on one demo page, and a new page uses different replacements.",
     "where": "landing preview and demo",
     "test": "npm run test:e2e -- --grep '@claim:browser-redaction'",
-    "sandbox": "fresh browser pages; submit every stated class and a repeated email; assert raw values are absent, typed replacements exist, repeats match within one page, and a fresh page uses a different token"
+    "sandbox": "fresh browser pages; submit every stated class and a repeated email; assert raw values are absent, typed replacements exist, repeats match within one page, and a new page uses a different replacement"
   },
   {
     "id": "license-storage",
@@ -57,7 +57,7 @@
   },
   {
     "id": "manifest-contents",
-    "claim": "The manifest records a salted fingerprint for each file, rule names, and hit counts without matched values.",
+    "claim": "The manifest records a one-way file fingerprint that differs between casefiles, rule names, and hit counts without matched values.",
     "where": "landing workflow, README",
     "test": "npm run test:e2e -- --grep '@claim:manifest-contents'",
     "sandbox": "pack one file with three seeded classes; decrypt and parse the manifest; assert its per-file salted SHA-256 fingerprint, rule inventory, exact counts, and absence of every seeded value"

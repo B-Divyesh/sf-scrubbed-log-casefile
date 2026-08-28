@@ -516,7 +516,7 @@ fn separate_cli_casefiles_use_fresh_salts_and_stable_tokens() {
     assert_ne!(first_tokens[0], second_tokens[0]);
     for archive_path in [&first, &second] {
         let manifest = scrubbed_entry(archive_path, "casefile-manifest.json");
-        assert!(manifest.contains("fresh salt for each casefile"));
+        assert!(manifest.contains("Another casefile uses different replacements"));
     }
 }
 

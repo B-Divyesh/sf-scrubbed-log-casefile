@@ -36,11 +36,11 @@
           <h1 id="hero-title" tabindex="-1">Scrub incident logs before sharing</h1>
           <p class="lede">For engineers escalating bugs, it keeps useful structure while replacing common credentials and identifiers.</p>
           <ul class="trust-strip" aria-label="Product facts"><li>Scrubs in your browser</li><li>Demo works offline after one visit</li><li>CLI free · team pack $19 once</li></ul>
-          <div class="hero-actions"><a class="button primary" href="?demo=1">Try it with sample data</a><span>Opens a ready example. Nothing is saved.</span></div>
+          <div class="hero-actions"><a class="button primary" href="?demo=1">Try it with sample data</a><span>Opens a ready sample. Nothing is saved.</span></div>
         </div>
         <figure class="hero-art">
           <img src="/assets/casefile-hero.webp" width="1200" height="800" alt="Concrete evidence slab with sensitive log lines covered by moss-green strips" fetchpriority="high" />
-          <figcaption>EXAMPLE REDACTED LOG <span>Repeated values keep matching replacement tokens.</span></figcaption>
+          <figcaption>SAMPLE REDACTED LOG <span>Repeated values get matching replacements.</span></figcaption>
         </figure>
       </section>
 
@@ -48,7 +48,7 @@
         <div class="section-heading"><p class="eyebrow">LIVE / BROWSER-ONLY</p><h2 id="preview-title">Test an incident log fragment.</h2><p>The preview changes text in this tab. It sends no scrub input and saves no scrub input.</p></div>
         <div class="demo-grid">
           <div class="editor-block">
-            <div class="editor-label"><label for="raw-log">Raw incident fragment</label><button class="text-button" id="load-example" type="button">Load sample</button></div>
+            <div class="editor-label"><label for="raw-log">Raw incident fragment</label><button class="text-button" id="load-sample" type="button">Load sample</button></div>
             <textarea id="raw-log" spellcheck="false" rows="10" aria-describedby="demo-help">2026-08-28 ERROR login failed user=ria@example.com ip=10.2.3.44
 retry user=ria@example.com
 &quot;password&quot;: &quot;json-demo-password&quot;
@@ -75,7 +75,7 @@ Authorization: Bearer abcdefghijklmnop</textarea>
 
       <section class="section manifest" aria-labelledby="manifest-title">
         <div><p class="eyebrow">CLEAR LIMITS</p><h2 id="manifest-title">Limits of rule-based log scrubbing.</h2><p>Rules cannot find every secret or identifier. Review the casefile before sharing. This is not a log host or cloud scrubber.</p></div>
-        <pre aria-label="Example manifest with rule names and counts" tabindex="0">{
+        <pre aria-label="Sample manifest with rule names and counts" tabindex="0">{
   "format": "scrubbed-log-casefile",
   "rule_hits": {
     "email": 14,
@@ -99,7 +99,7 @@ casefile inspect vendor.casefile.zip --extract</code></pre></div>
       <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
         <div class="section-heading"><p class="eyebrow">ONE-TIME PRICING</p><h2 id="pricing-title">Free CLI and $19 team policy pack.</h2><p>The CLI stays MIT-licensed. The optional team pack adds four policy starters and a review checklist.</p></div>
         <div class="price-grid">
-          <article class="price-card"><p class="stamp">CORE</p><h3>Casefile CLI</h3><p class="price">$0</p><ul><li>Built-in safety rules</li><li>Local casefiles</li><li>AES-256 encryption and manifest</li><li>Project-owned JSON policy files</li></ul><a class="button secondary" href="#install">Install the CLI</a></article>
+          <article class="price-card"><p class="stamp">FREE CLI</p><h3>Casefile CLI</h3><p class="price">$0</p><ul><li>Built-in safety rules</li><li>Local casefiles</li><li>AES-256 encryption and manifest</li><li>Project-owned JSON policy files</li></ul><a class="button secondary" href="#install">Install the CLI</a></article>
           <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP starters</li><li>Team policy review checklist</li><li>One downloadable JSON pack</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a></article>
         </div>
         <div class="license-panel" id="license-panel">

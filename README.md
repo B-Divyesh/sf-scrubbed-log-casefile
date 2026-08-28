@@ -27,8 +27,8 @@ edits only in memory, and resets without touching license data. Landing and
 demo scrubbing send no input. The demo works offline after the first visit.
 
 The browser rules cover emails, IPv4 addresses, credentials, bearer tokens,
-and JWTs. A fresh in-memory salt keeps repeated values correlated only within
-one demo case.
+and JWTs. Repeated values match within one demo page. A new page uses different
+replacements.
 
 ## Pack an incident
 
@@ -46,8 +46,8 @@ headers, credential assignments, JWTs, emails, and IPv4 addresses. It also
 supports quoted JSON and YAML credential keys.
 
 The same value gets the same replacement within one casefile. A second
-casefile uses a fresh salt. A failed pack keeps existing output and leaves no
-partial casefile.
+casefile uses different replacements. A failed pack keeps existing output and
+leaves no partial casefile.
 
 ## Review a casefile
 
@@ -61,8 +61,8 @@ casefile inspect vendor.casefile.zip \
 Add `--extract` to write scrubbed files into a new temporary review directory.
 Safe relative paths are preserved. Extraction starts in a new empty directory.
 
-The manifest records one salted fingerprint per file. It also records rule
-names and hit counts without matched values.
+The manifest records a one-way file fingerprint that differs between
+casefiles. It also records rule names and hit counts without matched values.
 
 ## Add a project rule
 

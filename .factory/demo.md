@@ -10,10 +10,10 @@ view shows a credential and repeated email replaced before the full editor.
 **Reset demo** restores the sample and **Start for real** opens the CLI install
 steps.
 
-The browser demo is in-memory. Each page or reset creates a fresh salt, so
-repeated values correlate only within that demo case. It does not use
-localStorage, sessionStorage, IndexedDB, or the real license namespace.
-Reloading or leaving the route drops all edits.
+The browser demo is in-memory. Repeated values match within one demo page. A
+new page or reset uses different replacements. It does not use localStorage,
+sessionStorage, IndexedDB, or the real license namespace. Reloading or leaving
+the route drops all edits.
 
 ## CLI
 

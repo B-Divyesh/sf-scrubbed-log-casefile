@@ -26,7 +26,7 @@ function initializeHome() {
 byId<HTMLButtonElement>('scrub-button').addEventListener('click', () => {
   if (!rawLog.value.trim()) {
     output.textContent = 'Nothing to scrub yet.';
-    summary.textContent = 'Paste a log fragment or load the example, then try again.';
+    summary.textContent = 'Paste a log fragment or load the sample, then try again.';
     copyOutput.disabled = true;
     rawLog.focus();
     return;
@@ -39,7 +39,7 @@ byId<HTMLButtonElement>('scrub-button').addEventListener('click', () => {
   copyOutput.disabled = false;
 });
 
-byId<HTMLButtonElement>('load-example').addEventListener('click', () => {
+byId<HTMLButtonElement>('load-sample').addEventListener('click', () => {
   rawLog.value = '2026-08-28 ERROR login failed user=ria@example.com ip=10.2.3.44\nretry user=ria@example.com\n"password": "json-demo-password"\nAuthorization: Bearer abcdefghijklmnop';
   rawLog.focus();
 });
@@ -85,7 +85,7 @@ async function verifyLicense(token: string, foreground = false) {
     localStorage.setItem(verdictKey, JSON.stringify({ valid: body.valid, checkedAt: Date.now() }));
     setUnlocked(body.valid, body.valid ? 'Team-pack license active on this device.' : 'License no longer active. You can purchase or paste another token.');
   } catch {
-    setUnlocked(Boolean(readVerdict()?.valid), 'Could not reach license verification. The saved verdict is unchanged; try again when connected.');
+    setUnlocked(Boolean(readVerdict()?.valid), 'Could not reach license verification. Your last license status is unchanged. Try again when connected.');
   }
 }
 

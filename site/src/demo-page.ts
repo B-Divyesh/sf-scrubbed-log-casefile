@@ -22,7 +22,7 @@ function render() {
   summary.textContent = `${total} sensitive values replaced. The same value keeps one replacement in this demo case.`;
   const readyResult = scrubPreview('user=ria@example.com again=ria@example.com password=json-demo-password', demoSalt);
   readyOutput.textContent = readyResult.text;
-  readySummary.textContent = `${total} sample values replaced. Fresh in-memory salt for this demo case.`;
+  readySummary.textContent = `${total} sample values replaced. A new demo uses different replacements.`;
 }
 function reset(newSalt = false) { if (newSalt) demoSalt = createCaseSalt(); rawLog.value = sample; render(); }
 byId<HTMLButtonElement>('scrub-button').addEventListener('click', render);

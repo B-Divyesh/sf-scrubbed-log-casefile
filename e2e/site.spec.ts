@@ -18,6 +18,32 @@ test('cold first screen names engineers and has one sample-data action', async (
   }
 });
 
+test('plain-language sample, replacement, and license wording stays consistent', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.hero-actions')).toContainText('Opens a ready sample. Nothing is saved.');
+  await expect(page.locator('.hero-art figcaption')).toContainText('SAMPLE REDACTED LOG');
+  await expect(page.locator('.hero-art figcaption')).toContainText('Repeated values get matching replacements.');
+  await expect(page.locator('.hero-art').evaluate((figure) => getComputedStyle(figure, '::before').content)).resolves.toBe('"SAMPLE REDACTED LOG"');
+  await expect(page.locator('#load-sample')).toHaveText('Load sample');
+  await page.locator('#raw-log').fill('');
+  await page.getByRole('button', { name: 'Scrub this fragment' }).click();
+  await expect(page.locator('#demo-summary')).toHaveText('Paste a log fragment or load the sample, then try again.');
+  await expect(page.locator('.price-card').first().locator('.stamp')).toHaveText('FREE CLI');
+
+  await page.route('https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/verify?license=copy-failure-license', (route) => route.abort());
+  await page.goto('/?license=copy-failure-license');
+  await expect(page.locator('#license-status')).toHaveText('Could not reach license verification. Your last license status is unchanged. Try again when connected.');
+
+  await page.goto('/demo/');
+  await expect(page.locator('#demo-ready-summary')).toContainText('A new demo uses different replacements.');
+
+  const readme = readFileSync('README.md', 'utf8');
+  expect(readme).toContain('Repeated values match within one demo page. A new page uses different\nreplacements.');
+  expect(readme).toContain('A second\ncasefile uses different replacements.');
+  expect(readme).toContain('one-way file fingerprint that differs between\ncasefiles');
+  expect(readme).not.toMatch(/fresh in-memory salt|correlated|salted fingerprint/i);
+});
+
 test('@claim:browser-local landing and demo scrub without sending or saving input and every route loads no tracking resources', async ({ page }) => {
   const requests: { url: string; postData: string | null }[] = [];
   page.on('request', (request) => requests.push({ url: request.url(), postData: request.postData() }));
@@ -66,7 +92,7 @@ test('@claim:browser-local landing and demo scrub without sending or saving inpu
   expect(requests.some((request) => sentinels.some((value) => request.url.includes(value) || request.postData?.includes(value)))).toBe(false);
 });
 
-test('@claim:browser-redaction browser demo replaces every stated class, correlates repeats, and uses a fresh case salt', async ({ page, context }) => {
+test('@claim:browser-redaction browser demo replaces every stated class, matches repeats on one page, and changes replacements on a new page', async ({ page, context }) => {
   const input = 'email=same@example.com again=same@example.com ip=10.9.8.7 password=browser-secret Authorization: Bearer browser-bearer-123 jwt=eyJabcdefgh.abcdefgh.abcdefgh';
   await page.goto('/demo/');
   await page.locator('#raw-log').fill(input);

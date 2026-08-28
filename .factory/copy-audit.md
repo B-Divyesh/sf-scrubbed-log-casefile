@@ -10,8 +10,9 @@ and no sentence contains a banned marketing word.
 | The sample scrubber still works. | 5 |
 | Reconnect to verify a saved license. | 6 |
 | For engineers escalating bugs, it keeps useful structure while replacing common credentials and identifiers. | 14 |
-| Opens a ready example. | 4 |
+| Opens a ready sample. | 4 |
 | Nothing is saved. | 3 |
+| Repeated values get matching replacements. | 5 |
 | The preview changes text in this tab. | 7 |
 | It sends no scrub input and saves no scrub input. | 10 |
 | Recognizes common emails, IPv4 addresses, credentials, bearer tokens, and JWTs. | 10 |
@@ -39,7 +40,7 @@ and no sentence contains a banned marketing word.
 | Team pack ready. | 3 |
 | Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules with the team review checklist. | 14 |
 | Nothing to scrub yet. | 4 |
-| Paste a log fragment or load the example, then try again. | 11 |
+| Paste a log fragment or load the sample, then try again. | 11 |
 | No built-in rule matched. | 4 |
 | Add a project rule in a policy file. | 8 |
 | Copy was blocked by the browser. | 6 |
@@ -49,10 +50,11 @@ and no sentence contains a banned marketing word.
 | License no longer active. | 4 |
 | You can purchase or paste another token. | 7 |
 | Could not reach license verification. | 5 |
-| The saved verdict is unchanged; try again when connected. | 9 |
+| Could not reach license verification. Your last license status is unchanged. Try again when connected. | 15 |
 | License received. | 2 |
 | Confirming it with Sociobot… | 4 |
 | Verifying license… | 2 |
+| A new demo uses different replacements. | 6 |
 | Scrub incident logs locally before sharing. | 6 |
 
 The generated success status has a four-word base plus two words per matched
@@ -76,8 +78,12 @@ rule. All five browser rules produce at most 14 words.
 | One named detector | rule |
 | JSON detector collection | policy file |
 | Browser try-out | demo |
-| Example inputs | sample data |
+| Sample inputs | sample data |
 | Optional purchase | team pack |
 
-The art label says **EXAMPLE REDACTED LOG**. Its caption explains matching
-replacement tokens instead of using case lore.
+The art label says **SAMPLE REDACTED LOG**. Its caption says repeated values
+get matching replacements. The free pricing card says **FREE CLI**.
+
+README uses the same terms: repeated values match on one demo page, new pages
+and casefiles use different replacements, and the manifest has a one-way file
+fingerprint that differs between casefiles.

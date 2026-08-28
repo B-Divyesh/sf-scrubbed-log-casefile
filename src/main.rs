@@ -579,7 +579,7 @@ fn pack_prevalidated(args: PackArgs, password: String) -> Result<SuccessSummary,
                 .unwrap_or_default()
                 .as_secs(),
             statement: "Rule-based redaction is not proof that all sensitive data was detected. Review before sharing.".into(),
-            token_scope: "Stable only within this casefile; fingerprints and tokens use a fresh salt for each casefile.".into(),
+            token_scope: "Repeated values use matching replacements in this casefile. Another casefile uses different replacements and file fingerprints.".into(),
             rules: rule_names,
             rule_hits: totals.clone(),
             files: records,
