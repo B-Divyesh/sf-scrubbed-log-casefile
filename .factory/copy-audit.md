@@ -26,13 +26,15 @@ longer than 22 words. No copy uses a banned marketing word.
 | Failure stays atomic. | 3 |
 | Incomplete archives are removed. | 4 |
 | Existing output remains unless you pass --force. | 7 |
+| Recorded from the shipped casefile demo command. | 7 |
+| It writes two sample files and one encrypted archive in a new temporary directory. | 14 |
 | The CLI stays MIT-licensed. | 4 |
-| The optional team pack adds four reviewed policy starters. | 9 |
+| The optional team pack adds four policy starters and a review checklist. | 12 |
 | Sociobot/Dodo is merchant of record. | 5 |
 | Refunds revoke the license. | 4 |
 | No active team-pack license on this device. | 7 |
 | Team pack ready. | 3 |
-| Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules. | 9 |
+| Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules with the team review checklist. | 14 |
 
 ## First-screen read
 

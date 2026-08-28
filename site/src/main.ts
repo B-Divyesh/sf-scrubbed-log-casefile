@@ -110,6 +110,12 @@ byId<HTMLButtonElement>('download-pack').addEventListener('click', () => {
       { name: 'postgres-connection-url', kind: 'PG_CREDENTIALS', pattern: 'postgres(?:ql)?://(?P<value>[^\\s/@:]+:[^\\s/@]+)@' },
       { name: 'request-correlation-id', kind: 'REQUEST_ID', pattern: '(?i)(?:x-request-id|trace[_-]?id)[=: ]+(?P<value>[a-f0-9-]{16,64})' },
     ],
+    review_checklist: [
+      'Name the systems and log sources this policy covers.',
+      'Run the policy against representative incident logs before adopting it.',
+      'Review false positives and custom values with the team that owns them.',
+      'Check the value-free manifest and share the archive password separately.',
+    ],
     note: 'Review and tailor these starters before use. No rule set guarantees complete detection.',
   }, null, 2);
   const link = document.createElement('a');

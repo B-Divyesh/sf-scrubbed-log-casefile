@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -12,7 +13,7 @@ test('cold first screen names engineers and has one sample-data action', async (
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toBeVisible();
 });
 
-test('@claim:browser-local demo is ready in one click and keeps input ephemeral', async ({ page }) => {
+test('@claim:browser-local demo is ready in one click, keeps input ephemeral, and loads no tracking resources', async ({ page }) => {
   const requests: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
   await page.goto('/demo/');
@@ -25,6 +26,11 @@ test('@claim:browser-local demo is ready in one click and keeps input ephemeral'
   await expect(page.locator('#raw-log')).toHaveValue(/ria@example\.com/);
   expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
   expect(requests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+
+  const privacyRequests: string[] = [];
+  page.on('request', (request) => privacyRequests.push(request.url()));
+  await page.goto('/privacy/');
+  expect(privacyRequests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
 });
 
 test('@claim:offline-reload reloads the interactive demo without HTTP cache', async ({ page, context }) => {
@@ -62,6 +68,7 @@ test('keyboard, 200% text, touch targets, and accessibility pass at 390px', asyn
   const dimensions = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth }));
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
   for (const link of await page.locator('footer nav a').all()) {
+    expect((await link.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
   }
   const results = await new AxeBuilder({ page }).analyze();
@@ -74,7 +81,14 @@ for (const path of ['/', '/demo/', '/privacy/', '/terms/', '/404.html']) {
     await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('main')).toHaveCount(1);
     await expect(page.locator('meta[name="description"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
     await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:description"]')).toHaveCount(1);
+    await expect(page.locator('meta[property="og:image"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="twitter:description"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveCount(1);
     const results = await new AxeBuilder({ page }).options({ runOnly: { type: 'tag', values: ['wcag2aa'] } }).analyze();
     expect(results.violations).toEqual([]);
   });
@@ -98,7 +112,7 @@ test('deployment policy declares security, cache, MIME, and 404 behavior', () =>
   expect(policy.responseOverrides['404'].statusCode).toBe(404);
 });
 
-test('@claim:team-policy-pack cached valid license downloads four policy starters', async ({ page }) => {
+test('@claim:team-policy-pack cached valid license downloads four policy starters and a review checklist', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('sb_license:scrubbed-log-casefile', 'cached-license');
     localStorage.setItem('sb_license_verdict:scrubbed-log-casefile', JSON.stringify({ valid: true, checkedAt: Date.now() }));
@@ -116,6 +130,27 @@ test('@claim:team-policy-pack cached valid license downloads four policy starter
   expect(pack.rules.map((rule: { name: string }) => rule.name)).toEqual([
     'aws-access-key-id', 'kubernetes-service-token', 'postgres-connection-url', 'request-correlation-id',
   ]);
+  expect(pack.review_checklist).toEqual([
+    'Name the systems and log sources this policy covers.',
+    'Run the policy against representative incident logs before adopting it.',
+    'Review false positives and custom values with the team that owns them.',
+    'Check the value-free manifest and share the archive password separately.',
+  ]);
+  expect(pack.note).toContain('No rule set guarantees complete detection');
+  await expect(page.locator('#buy-link')).toHaveAttribute('href', 'https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout');
+});
+
+test('@claim:cli-recording landing page includes the self-hosted real CLI demo recording', async ({ page, request }) => {
+  await page.goto('/');
+  const recording = page.getByRole('img', { name: 'Terminal recording of casefile demo creating an encrypted sample archive' });
+  await expect(recording).toHaveAttribute('src', '/assets/casefile-demo.svg');
+  expect((await request.get('/assets/casefile-demo.svg')).status()).toBe(200);
+  const transcript = execFileSync('cargo', ['run', '--quiet', '--', 'demo'], { encoding: 'utf8' });
+  const summary = transcript.match(/Demo casefile: (.+)\n[\s\S]*Sealed (\d+) files after (\d+) redactions\./);
+  expect(summary).not.toBeNull();
+  const svg = readFileSync('site/public/assets/casefile-demo.svg', 'utf8');
+  expect(svg).toContain(`Sealed ${summary?.[2]} files after ${summary?.[3]} redactions.`);
+  rmSync(dirname(summary?.[1] ?? ''), { recursive: true, force: true });
 });
 
 test('@claim:cli-demo bundled CLI demo creates sample input and an archive', () => {
@@ -136,8 +171,17 @@ test('@claim:credential-redaction observable CLI contract passes', () => {
 test('@claim:encrypted-casefile observable CLI contract passes', () => {
   expectRustContract('encrypted_entries_decrypt_to_scrubbed_content_and_manifest');
 });
+test('@claim:aes-256 observable CLI contract passes', () => {
+  expectRustContract('archive_uses_aes_256_encryption');
+});
+test('@claim:password-env observable CLI contract passes', () => {
+  expectRustContract('password_is_read_from_an_environment_variable_not_a_cli_argument');
+});
 test('@claim:machine-json observable CLI contract passes', () => {
-  expectRustContract('json_flag_covers_command_line_parse_errors');
+  expectRustContract('json_flag_covers_success_validation_and_parse_errors');
+});
+test('@claim:exit-codes observable CLI contract passes', () => {
+  expectRustContract('documented_exit_codes_cover_success_validation_and_runtime_failure');
 });
 test('@claim:custom-rules observable CLI contract passes', () => {
   expectRustContract('documented_custom_policy_replaces_only_the_named_value_capture');
@@ -149,9 +193,10 @@ test('@claim:atomic-output observable CLI contract passes', () => {
   expectRustContract('existing_output_is_unchanged_and_failed_pack_leaves_no_temporary_archive');
 });
 
-test('@claim:single-binary package exposes one CLI binary', () => {
+test('@claim:single-binary MIT package exposes one CLI binary', () => {
   const metadata = JSON.parse(execFileSync('cargo', ['metadata', '--no-deps', '--format-version', '1'], { encoding: 'utf8' }));
   const product = metadata.packages.find((item: { name: string }) => item.name === 'scrubbed-log-casefile');
+  expect(product.license).toBe('MIT');
   expect(product.targets.filter((target: { kind: string[] }) => target.kind.includes('bin')).map((target: { name: string }) => target.name)).toEqual(['casefile']);
 });
 

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="390" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">casefile demo terminal recording</title>
+  <desc id="desc">The shipped casefile demo command creates a temporary sample directory and encrypted archive after eight redactions.</desc>
+  <rect width="960" height="390" fill="#080a08"/>
+  <rect x="1" y="1" width="958" height="388" fill="none" stroke="#555b50" stroke-width="2"/>
+  <rect width="960" height="48" fill="#d6d2c6"/>
+  <circle cx="26" cy="24" r="7" fill="#69853b"/>
+  <circle cx="50" cy="24" r="7" fill="#69853b"/>
+  <circle cx="74" cy="24" r="7" fill="#69853b"/>
+  <text x="104" y="30" fill="#121512" font-family="monospace" font-size="16" font-weight="700">LOCAL TERMINAL / RECORDED DEMO</text>
+  <g font-family="monospace" font-size="19">
+    <text x="32" y="92" fill="#b9e769">$ casefile demo</text>
+    <text x="32" y="132" fill="#d6d2c6">Demo casefile: /tmp/casefile-demo-…/sample.casefile.zip</text>
+    <text x="32" y="166" fill="#d6d2c6">Sample input: /tmp/casefile-demo-…/incident</text>
+    <text x="32" y="200" fill="#d6d2c6">Archive password: casefile-demo-password</text>
+    <text x="32" y="244" fill="#b9e769">Sealed 2 files after 8 redactions.</text>
+    <text x="32" y="278" fill="#a7aa9d">Nothing was written outside this demo directory.</text>
+    <text x="32" y="338" fill="#b9e769">$</text>
+  </g>
+</svg>

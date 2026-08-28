@@ -15,6 +15,7 @@
 .terminal-top .text-button.inverse{color:#293217}
 html.text-scale-200{font-size:32px}
 .hero-actions{align-items:center}.hero-actions>span{max-width:24ch;color:var(--dust);font-size:.82rem}
-footer nav a{min-height:44px;display:inline-flex;align-items:center}
+footer nav a{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.cli-recording{margin:40px 0 0;border:2px solid var(--rule);background:#080a08;box-shadow:10px 10px 0 var(--slab)}.cli-recording img{display:block;width:100%;height:auto}.cli-recording figcaption{padding:12px 16px;color:var(--dust);border-top:2px solid var(--rule);font-size:.78rem}
 .demo-banner{position:sticky;z-index:15;top:0;display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:52px;padding:4px max(20px,calc((100vw - 1280px)/2));color:var(--ink);background:var(--moss);font-size:.82rem}.demo-banner div{display:flex;align-items:center;gap:16px}.demo-banner .text-button{color:var(--ink)}.demo-banner a{min-height:44px;display:inline-flex;align-items:center;font-weight:800}.demo-page .demo{min-height:calc(100vh - 220px)}.demo-page h1{max-width:13ch;font-size:clamp(2.8rem,7vw,5rem)}.missing-case{min-height:calc(100vh - 170px)}
 @media(max-width:480px){.site-header nav{display:none}.wordmark{font-size:.8rem}.hero h1{font-size:clamp(2.15rem,15vw,4rem);overflow-wrap:break-word}.demo-banner{position:relative;align-items:flex-start;flex-direction:column;padding-block:8px}.demo-banner div{width:100%;justify-content:space-between}footer nav{gap:8px 20px}}

@@ -63,3 +63,7 @@ sensitive spans while keeping repeated tokens useful.
 
 The 1200×630 social image is a center crop of that original hero. The 180px
 touch icon is a local raster rendering of the hand-authored SVG redaction mark.
+The CLI recording is a hand-authored SVG transcript of the shipped `casefile
+demo` command, committed as `site/public/assets/casefile-demo.svg`; its text is
+regression-checked against a fresh command run. It uses the same concrete,
+moss, and terminal type palette as the rest of the workbench.

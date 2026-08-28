@@ -1,10 +1,10 @@
 [
   {
     "id": "browser-local",
-    "claim": "The browser demo sends and saves no scrub input.",
+    "claim": "The browser demo sends and saves no scrub input, and the site loads no third-party tracking resources.",
     "where": "landing preview, demo banner, privacy page, README",
     "test": "npm run test:e2e -- --grep '@claim:browser-local'",
-    "sandbox": "fresh browser context; record every request; edit and reset sample; assert same-origin requests and empty storage"
+    "sandbox": "fresh browser context; record demo and privacy requests; edit and reset sample; assert only same-origin requests and empty storage"
   },
   {
     "id": "offline-reload",
@@ -35,11 +35,32 @@
     "sandbox": "pack seeded input; decrypt file and manifest with the user password; assert raw values are absent"
   },
   {
+    "id": "aes-256",
+    "claim": "Every casefile ZIP entry uses AES-256 encryption.",
+    "where": "landing workflow and pricing, CLI help, README",
+    "test": "npm run test:e2e -- --grep '@claim:aes-256'",
+    "sandbox": "pack seeded input; inspect every ZIP entry's AES metadata and assert Aes256"
+  },
+  {
+    "id": "password-env",
+    "claim": "The CLI reads archive passwords from an environment variable, not a password command-line argument.",
+    "where": "landing install, README",
+    "test": "npm run test:e2e -- --grep '@claim:password-env'",
+    "sandbox": "inspect pack help; assert --password-env exists and no --password argument is accepted"
+  },
+  {
     "id": "machine-json",
     "claim": "--json returns a machine-readable object for success, validation, and parse errors.",
     "where": "README",
     "test": "npm run test:e2e -- --grep '@claim:machine-json'",
-    "sandbox": "invoke an incomplete pack command with --json; parse stdout and assert exit 2 with empty stderr"
+    "sandbox": "invoke successful, validation-failure, and parse-failure pack commands with --json; parse each stdout object and assert empty stderr"
+  },
+  {
+    "id": "exit-codes",
+    "claim": "The CLI exits 0 on success, 2 for invalid input, and 1 for runtime failure.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep '@claim:exit-codes'",
+    "sandbox": "run successful, missing-input, and unwritable-output commands; assert exact process exit codes"
   },
   {
     "id": "custom-rules",
@@ -64,10 +85,10 @@
   },
   {
     "id": "single-binary",
-    "claim": "The package exposes one CLI binary.",
+    "claim": "The MIT package exposes one CLI binary.",
     "where": "landing install, README",
     "test": "npm run test:e2e -- --grep '@claim:single-binary'",
-    "sandbox": "read Cargo package metadata and assert the only binary target is casefile"
+    "sandbox": "read Cargo package metadata and assert the MIT license plus the only binary target is casefile"
   },
   {
     "id": "cli-local",
@@ -78,9 +99,16 @@
   },
   {
     "id": "team-policy-pack",
-    "claim": "The $19 one-time team pack downloads four listed policy starters after a cached valid license.",
+    "claim": "The $19 one-time team pack downloads four listed policy starters and a team review checklist after a cached valid license.",
     "where": "landing pricing, terms, README",
     "test": "npm run test:e2e -- --grep '@claim:team-policy-pack'",
-    "sandbox": "seed a current valid verdict; assert price copy and inspect the downloaded JSON rule names"
+    "sandbox": "seed a current valid verdict; assert price and checkout copy, then inspect the downloaded JSON rule names and checklist"
+  },
+  {
+    "id": "cli-recording",
+    "claim": "The landing page includes a self-hosted recording of the real casefile demo command.",
+    "where": "landing install",
+    "test": "npm run test:e2e -- --grep '@claim:cli-recording'",
+    "sandbox": "load the landing page; assert the labelled SVG recording is served from the same origin"
   }
 ]

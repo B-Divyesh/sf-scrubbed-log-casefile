@@ -86,28 +86,29 @@ Authorization: Bearer abcdefghijklmnop</textarea>
       </section>
 
       <section class="section install" id="install" aria-labelledby="install-title">
-        <div class="section-heading"><p class="eyebrow">VERSION 0.1.1 / MIT</p><h2 id="install-title">Build one local binary.</h2><p>Run the bundled sample first, then pack your own incident files.</p></div>
+        <div class="section-heading"><p class="eyebrow">VERSION 0.1.2 / MIT</p><h2 id="install-title">Build one local binary.</h2><p>Run the bundled sample first, then pack your own incident files.</p></div>
         <div class="terminal"><div class="terminal-top"><span>BUILD + DEMO</span><button class="text-button inverse" id="copy-command" type="button">Copy command</button></div><pre id="install-command" tabindex="0"><code>cargo install --git https://github.com/B-Divyesh/sf-scrubbed-log-casefile
 casefile demo
 export CASEFILE_PASSWORD='a-long-unique-passphrase'
 casefile pack ./incident --output vendor.zip</code></pre></div>
+        <figure class="cli-recording"><img src="/assets/casefile-demo.svg" width="960" height="390" alt="Terminal recording of casefile demo creating an encrypted sample archive" /><figcaption>Recorded from the shipped <code>casefile demo</code> command. It writes two sample files and one encrypted archive in a new temporary directory.</figcaption></figure>
         <div class="install-notes"><p><strong>Password stays out of arguments.</strong><br />Read it from <code>CASEFILE_PASSWORD</code> or another variable.</p><p><strong>Failure stays atomic.</strong><br />Incomplete archives are removed. Existing output remains unless you pass <code>--force</code>.</p></div>
       </section>
 
       <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
-        <div class="section-heading"><p class="eyebrow">ONE-TIME PRICING</p><h2 id="pricing-title">Keep the safety core free.</h2><p>The CLI stays MIT-licensed. The optional team pack adds four reviewed policy starters.</p></div>
+        <div class="section-heading"><p class="eyebrow">ONE-TIME PRICING</p><h2 id="pricing-title">Keep the safety core free.</h2><p>The CLI stays MIT-licensed. The optional team pack adds four policy starters and a review checklist.</p></div>
         <div class="price-grid">
           <article class="price-card"><p class="stamp">CORE</p><h3>Casefile CLI</h3><p class="price">$0</p><ul><li>Built-in safety rules</li><li>Local casefiles</li><li>AES-256 archive and manifest</li><li>Project-owned JSON policies</li></ul><a class="button secondary" href="#install">Install the CLI</a></article>
-          <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP starters</li><li>Team policy review checklist</li><li>Future v1 template updates</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a><p class="merchant">Sociobot/Dodo is merchant of record. Refunds revoke the license.</p></article>
+          <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP starters</li><li>Team policy review checklist</li><li>One downloadable JSON pack</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a><p class="merchant">Sociobot/Dodo is merchant of record. Refunds revoke the license.</p></article>
         </div>
         <div class="license-panel" id="license-panel">
           <div><h3>Restore a purchase</h3><p id="license-status" role="status">No active team-pack license on this device.</p></div>
           <form id="license-form"><label for="license-token">License token</label><div class="field-row"><input id="license-token" name="license" autocomplete="off" required /><button class="button secondary" type="submit">Verify license</button></div></form>
-          <div class="unlocked-content" id="unlocked-content" hidden><p><strong>Team pack ready.</strong> Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules.</p><button class="button primary" id="download-pack" type="button">Download policy pack</button></div>
+          <div class="unlocked-content" id="unlocked-content" hidden><p><strong>Team pack ready.</strong> Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules with the team review checklist.</p><button class="button primary" id="download-pack" type="button">Download policy pack</button></div>
         </div>
       </section>
     </main>
-    <footer><p><span aria-hidden="true">[////]</span> Scrubbed Log Casefile</p><nav aria-label="Legal and project links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-scrubbed-log-casefile">Source on GitHub</a></nav><p>Built by Param Factory · v0.1.1</p></footer>
+    <footer><p><span aria-hidden="true">[////]</span> Scrubbed Log Casefile</p><nav aria-label="Legal and project links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-scrubbed-log-casefile">Source on GitHub</a></nav><p>Built by Param Factory · v0.1.2</p></footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

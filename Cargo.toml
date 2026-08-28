@@ -1,6 +1,6 @@
 [package]
 name = "scrubbed-log-casefile"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Offline, stable-token log redaction and encrypted casefile packaging"
 license = "MIT"

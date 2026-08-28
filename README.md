@@ -70,7 +70,8 @@ casefile pack ./incident \
 ## Privacy and security limits
 
 The CLI package contains no network or telemetry client. ZIP entries use
-AES-256 encryption with the user-held password. A manifest records file
+AES-256 encryption with the user-held password. The CLI reads that password
+from an environment variable and does not accept it as a command-line argument. A manifest records file
 fingerprints, rule names, and hit counts without matched values.
 
 Rules cannot detect every secret or identifier. Inspect the scrub policy and
@@ -79,8 +80,8 @@ send the archive password through a separate channel.
 ## Optional team pack
 
 The CLI and safety features remain MIT-licensed. A $19 one-time license adds
-four policy starters for AWS, Kubernetes, PostgreSQL, and HTTP traces. Payment
-and refunds use the Sociobot billing service.
+four policy starters for AWS, Kubernetes, PostgreSQL, and HTTP traces, plus a
+team policy review checklist. Payment and refunds use the Sociobot billing service.
 
 ## Develop and verify
 

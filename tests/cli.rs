@@ -106,6 +106,47 @@ fn encrypted_entries_decrypt_to_scrubbed_content_and_manifest() {
 }
 
 #[test]
+fn archive_uses_aes_256_encryption() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("app.log");
+    let output = temp.path().join("case.zip");
+    fs::write(&input, "user=person@example.com").unwrap();
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .success();
+
+    let mut archive = zip::ZipArchive::new(fs::File::open(output).unwrap()).unwrap();
+    for index in 0..archive.len() {
+        let info = archive
+            .get_aes_verification_key_and_salt(index)
+            .unwrap()
+            .expect("casefile entries must use AES encryption");
+        assert_eq!(info.aes_mode, zip::AesMode::Aes256);
+    }
+}
+
+#[test]
+fn password_is_read_from_an_environment_variable_not_a_cli_argument() {
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args(["pack", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--password-env <NAME>"))
+        .stdout(predicate::str::contains("--password <").not());
+}
+
+#[test]
 fn documented_custom_policy_replaces_only_the_named_value_capture() {
     let temp = tempfile::tempdir().unwrap();
     let input = temp.path().join("tenant.log");
@@ -221,17 +262,110 @@ private-key-material
 }
 
 #[test]
-fn json_flag_covers_command_line_parse_errors() {
-    let output = Command::cargo_bin("casefile")
+fn json_flag_covers_success_validation_and_parse_errors() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("app.log");
+    let output_path = temp.path().join("case.zip");
+    fs::write(&input, "email=person@example.com").unwrap();
+
+    let success = Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            output_path.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+            "--json",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .output()
+        .unwrap();
+    assert_eq!(success.status.code(), Some(0));
+    assert!(success.stderr.is_empty());
+    let success_body: serde_json::Value = serde_json::from_slice(&success.stdout).unwrap();
+    assert_eq!(success_body["ok"], true);
+    assert_eq!(success_body["files_written"], 1);
+
+    let validation = Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            temp.path().join("validation.zip").to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_MISSING",
+            "--json",
+        ])
+        .env_remove("CASEFILE_TEST_MISSING")
+        .output()
+        .unwrap();
+    assert_eq!(validation.status.code(), Some(2));
+    assert!(validation.stderr.is_empty());
+    let validation_body: serde_json::Value = serde_json::from_slice(&validation.stdout).unwrap();
+    assert_eq!(validation_body["ok"], false);
+    assert!(
+        validation_body["error"]
+            .as_str()
+            .unwrap()
+            .contains("not set")
+    );
+
+    let parse = Command::cargo_bin("casefile")
         .unwrap()
         .args(["pack", "--json"])
         .output()
         .unwrap();
-    assert_eq!(output.status.code(), Some(2));
-    assert!(output.stderr.is_empty());
-    let body: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(body["ok"], false);
-    assert!(body["error"].as_str().unwrap().contains("required"));
+    assert_eq!(parse.status.code(), Some(2));
+    assert!(parse.stderr.is_empty());
+    let parse_body: serde_json::Value = serde_json::from_slice(&parse.stdout).unwrap();
+    assert_eq!(parse_body["ok"], false);
+    assert!(parse_body["error"].as_str().unwrap().contains("required"));
+}
+
+#[test]
+fn documented_exit_codes_cover_success_validation_and_runtime_failure() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("app.log");
+    let output = temp.path().join("case.zip");
+    fs::write(&input, "email=person@example.com").unwrap();
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+            "--json",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .code(0);
+
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args(["pack", "--json"])
+        .assert()
+        .code(2);
+
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            "examples/incident/app.log",
+            "--output",
+            "/proc/casefile-runtime-failure.zip",
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+            "--json",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .code(1);
 }
 
 #[test]

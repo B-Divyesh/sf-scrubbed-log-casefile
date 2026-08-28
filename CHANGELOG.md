@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2026-08-28
+
+- Add direct AES-256, password-handling, exact-exit-code, and complete JSON-mode regressions.
+- Include the team policy review checklist in the paid JSON download.
+- Add the self-hosted CLI terminal recording, complete route social metadata, and 44px footer targets.
+
 ## 0.1.1 - 2026-08-28
 
 - Scrub quoted JSON and YAML credential assignments.
