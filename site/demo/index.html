@@ -22,7 +22,7 @@
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
     <aside class="demo-banner" aria-label="Demo mode"><strong>Demo — sample data, nothing is saved</strong><div><button class="text-button" id="reset-demo" type="button">Reset demo</button><a href="/#install">Start for real</a></div></aside>
-    <header class="site-header"><a class="wordmark" href="/" aria-label="Scrubbed Log Casefile home"><span aria-hidden="true">[////]</span> CASEFILE</a><nav aria-label="Primary navigation"><a class="nav-command" href="/#install">Install</a></nav></header>
+    <header class="site-header"><a class="wordmark" href="/" aria-label="Scrubbed Log Casefile home"><span aria-hidden="true">[////]</span> CASEFILE</a><nav aria-label="Primary navigation"><a href="/demo/" aria-current="page">Demo</a><a href="/#workflow">How it works</a><a href="/#install">Install</a><a class="nav-command" href="/privacy/">Privacy</a></nav></header>
     <main id="main" class="demo-page" tabindex="-1">
       <section class="section demo" aria-labelledby="demo-page-title">
         <div class="section-heading"><p class="eyebrow">READY INCIDENT / INC-1842</p><h1 id="demo-page-title" tabindex="-1">Scrub a sample incident</h1><p>The scrubbed result is ready below. Edit the sample and run it again.</p></div>
@@ -32,6 +32,7 @@
         </div>
       </section>
     </main>
+    <p class="route-announcer" id="route-announcer" aria-live="polite" aria-atomic="true"></p>
     <footer><p><span aria-hidden="true">[////]</span> Scrubbed Log Casefile</p><nav aria-label="Legal links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><p>Built by Param Factory · v0.1.2</p></footer>
     <script type="module" src="/src/demo-page.ts"></script>
   </body>

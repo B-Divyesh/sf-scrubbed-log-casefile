@@ -4,7 +4,14 @@
     "claim": "The browser demo sends and saves no scrub input, and the site loads no third-party tracking resources.",
     "where": "landing preview, demo banner, privacy page, README",
     "test": "npm run test:e2e -- --grep '@claim:browser-local'",
-    "sandbox": "fresh browser context; record demo and privacy requests; edit and reset sample; assert only same-origin requests and empty storage"
+    "sandbox": "fresh browser context; record demo and privacy requests; enter a unique sentinel, scrub it, reset the sample; assert no URL or request body contains it, only same-origin resources load, and local/session/IndexedDB/Cache Storage contain no sentinel"
+  },
+  {
+    "id": "license-storage",
+    "claim": "A returned license is saved locally and verified with Sociobot.",
+    "where": "privacy page",
+    "test": "npm run test:e2e -- --grep '@claim:license-storage'",
+    "sandbox": "fresh browser context; intercept the documented Sociobot verification endpoint; load a fixture return token; assert query removal, local token/verdict storage, and the one expected endpoint"
   },
   {
     "id": "offline-reload",

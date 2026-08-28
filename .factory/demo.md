@@ -2,10 +2,11 @@
 
 ## Browser
 
-Open <https://scrubbed-log-casefile.sociobot.in/demo/> or select **Try it with
-sample data** on the first screen. The route starts with incident `INC-1842`
-already scrubbed. **Reset demo** restores the sample and **Start for real**
-opens the CLI install steps.
+Open <https://scrubbed-log-casefile.sociobot.in/demo/> or
+<https://scrubbed-log-casefile.sociobot.in/?demo=1>, or select **Try it with
+sample data** on the first screen. The query shortcut redirects to the demo
+route, which starts with incident `INC-1842` already scrubbed. **Reset demo**
+restores the sample and **Start for real** opens the CLI install steps.
 
 The browser demo is in-memory. It does not use localStorage, sessionStorage,
 IndexedDB, or the real license namespace. Reloading or leaving the route drops

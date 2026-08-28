@@ -33,9 +33,9 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow"><span>LOCAL / OFFLINE / ENCRYPTED</span></p>
-          <h1 id="hero-title">Scrub incident logs before sharing</h1>
+          <h1 id="hero-title" tabindex="-1">Scrub incident logs before sharing</h1>
           <p class="lede">For engineers escalating bugs, it keeps useful structure while replacing common credentials and identifiers.</p>
-          <div class="hero-actions"><a class="button primary" href="/demo/">Try it with sample data</a><span>Opens a ready example. Nothing is saved.</span></div>
+          <div class="hero-actions"><a class="button primary" href="?demo=1">Try it with sample data</a><span>Opens a ready example. Nothing is saved.</span></div>
           <ul class="trust-strip" aria-label="Product facts"><li>Runs in your browser</li><li>Works offline after one visit</li><li>CLI free · team pack $19 once</li></ul>
         </div>
         <figure class="hero-art">
@@ -65,7 +65,7 @@ Authorization: Bearer abcdefghijklmnop</textarea>
       </section>
 
       <section class="section workflow" id="workflow" aria-labelledby="workflow-title">
-        <div class="section-heading"><p class="eyebrow">THE CHAIN OF CUSTODY</p><h2 id="workflow-title">From raw incident to sealed case.</h2></div>
+        <div class="section-heading"><p class="eyebrow">HOW IT WORKS</p><h2 id="workflow-title">Scrub and package an incident log.</h2></div>
         <ol class="steps">
           <li><span class="step-number">01</span><div><h3>Collect locally</h3><p>Point one command at files or directories.</p></div></li>
           <li><span class="step-number">02</span><div><h3>Scrub consistently</h3><p>Named rules give repeated values stable, case-scoped tokens.</p></div></li>
@@ -99,7 +99,7 @@ casefile pack ./incident --output vendor.zip</code></pre></div>
         <div class="section-heading"><p class="eyebrow">ONE-TIME PRICING</p><h2 id="pricing-title">Keep the safety core free.</h2><p>The CLI stays MIT-licensed. The optional team pack adds four policy starters and a review checklist.</p></div>
         <div class="price-grid">
           <article class="price-card"><p class="stamp">CORE</p><h3>Casefile CLI</h3><p class="price">$0</p><ul><li>Built-in safety rules</li><li>Local casefiles</li><li>AES-256 archive and manifest</li><li>Project-owned JSON policies</li></ul><a class="button secondary" href="#install">Install the CLI</a></article>
-          <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP starters</li><li>Team policy review checklist</li><li>One downloadable JSON pack</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a><p class="merchant">Sociobot/Dodo is merchant of record. Refunds revoke the license.</p></article>
+          <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP starters</li><li>Team policy review checklist</li><li>One downloadable JSON pack</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a></article>
         </div>
         <div class="license-panel" id="license-panel">
           <div><h3>Restore a purchase</h3><p id="license-status" role="status">No active team-pack license on this device.</p></div>
@@ -108,6 +108,7 @@ casefile pack ./incident --output vendor.zip</code></pre></div>
         </div>
       </section>
     </main>
+    <p class="route-announcer" id="route-announcer" aria-live="polite" aria-atomic="true"></p>
     <footer><p><span aria-hidden="true">[////]</span> Scrubbed Log Casefile</p><nav aria-label="Legal and project links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-scrubbed-log-casefile">Source on GitHub</a></nav><p>Built by Param Factory · v0.1.2</p></footer>
     <script type="module" src="/src/main.ts"></script>
   </body>

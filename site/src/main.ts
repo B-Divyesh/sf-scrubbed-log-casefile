@@ -1,4 +1,5 @@
 import './styles.css';
+import './route-focus';
 import { scrubPreview } from './demo';
 
 const slug = 'scrubbed-log-casefile';
@@ -10,6 +11,12 @@ const rawLog = byId<HTMLTextAreaElement>('raw-log');
 const output = byId<HTMLElement>('scrubbed-output');
 const summary = byId<HTMLElement>('demo-summary');
 const copyOutput = byId<HTMLButtonElement>('copy-output');
+
+// Keep the catalog's ?demo=1 entry point as a one-click shortcut while the
+// isolated, in-memory demo remains a real URL with its own title and banner.
+if (new URLSearchParams(window.location.search).get('demo') === '1') {
+  window.location.replace('/demo/');
+}
 
 byId<HTMLButtonElement>('scrub-button').addEventListener('click', () => {
   if (!rawLog.value.trim()) {

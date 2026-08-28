@@ -81,7 +81,7 @@ send the archive password through a separate channel.
 
 The CLI and safety features remain MIT-licensed. A $19 one-time license adds
 four policy starters for AWS, Kubernetes, PostgreSQL, and HTTP traces, plus a
-team policy review checklist. Payment and refunds use the Sociobot billing service.
+team policy review checklist.
 
 ## Develop and verify
 

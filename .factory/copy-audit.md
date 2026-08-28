@@ -30,11 +30,16 @@ longer than 22 words. No copy uses a banned marketing word.
 | It writes two sample files and one encrypted archive in a new temporary directory. | 14 |
 | The CLI stays MIT-licensed. | 4 |
 | The optional team pack adds four policy starters and a review checklist. | 12 |
-| Sociobot/Dodo is merchant of record. | 5 |
-| Refunds revoke the license. | 4 |
 | No active team-pack license on this device. | 7 |
 | Team pack ready. | 3 |
 | Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules with the team review checklist. | 14 |
+
+### Workflow labels
+
+- **HOW IT WORKS** — 3 words.
+- **Scrub and package an incident log.** — 6 words.
+- **Collect locally**, **Scrub consistently**, and **Seal and share** use the
+  same log-scrubbing vocabulary as the first screen.
 
 ## First-screen read
 

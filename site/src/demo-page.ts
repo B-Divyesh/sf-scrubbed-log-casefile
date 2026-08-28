@@ -1,4 +1,5 @@
 import './styles.css';
+import './route-focus';
 import { scrubPreview } from './demo';
 
 const sample = `2026-08-28T07:42:16Z ERROR login failed user=ria@example.com ip=10.2.3.44

@@ -13,24 +13,59 @@ test('cold first screen names engineers and has one sample-data action', async (
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toBeVisible();
 });
 
-test('@claim:browser-local demo is ready in one click, keeps input ephemeral, and loads no tracking resources', async ({ page }) => {
-  const requests: string[] = [];
-  page.on('request', (request) => requests.push(request.url()));
+test('@claim:browser-local demo scrubs input without sending or saving it and loads no tracking resources', async ({ page }) => {
+  const requests: { url: string; postData: string | null }[] = [];
+  page.on('request', (request) => requests.push({ url: request.url(), postData: request.postData() }));
   await page.goto('/demo/');
   await expect(page).toHaveTitle('Demo — Scrubbed Log Casefile');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await expect(page.locator('#scrubbed-output')).toContainText('<SECRET:');
   await expect(page.locator('#scrubbed-output')).not.toContainText('json-demo-password');
-  await page.locator('#raw-log').fill('email=changed@example.com');
+  const sentinel = 'casefile-private-sentinel-9f1e@example.com';
+  await page.locator('#raw-log').fill(`email=${sentinel}`);
+  await page.getByRole('button', { name: 'Scrub this fragment' }).click();
+  await expect(page.locator('#scrubbed-output')).not.toContainText(sentinel);
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.locator('#raw-log')).toHaveValue(/ria@example\.com/);
-  expect(await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length }))).toEqual({ local: 0, session: 0 });
-  expect(requests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+  expect(await page.evaluate(async (value) => {
+    const cacheContents = await Promise.all((await caches.keys()).map(async (name) => {
+      const cache = await caches.open(name);
+      return Promise.all((await cache.keys()).map(async (request) => (await cache.match(request))?.text() ?? ''));
+    }));
+    return {
+      local: localStorage.length,
+      session: sessionStorage.length,
+      databases: await indexedDB.databases(),
+      cachedSentinel: cacheContents.flat().some((body) => body.includes(value)),
+    };
+  }, sentinel)).toEqual({ local: 0, session: 0, databases: [], cachedSentinel: false });
+  expect(requests.every((request) => new URL(request.url).origin === 'http://127.0.0.1:4173')).toBe(true);
+  expect(requests.some((request) => request.url.includes(sentinel) || request.postData?.includes(sentinel))).toBe(false);
 
   const privacyRequests: string[] = [];
   page.on('request', (request) => privacyRequests.push(request.url()));
   await page.goto('/privacy/');
   expect(privacyRequests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+});
+
+test('@claim:license-storage saves a returned license locally and verifies it only with Sociobot', async ({ page }) => {
+  const verificationUrls: string[] = [];
+  await page.route('https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/verify?license=fixture-license', async (route) => {
+    verificationUrls.push(route.request().url());
+    await route.fulfill({
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': 'http://127.0.0.1:4173' },
+      body: JSON.stringify({ valid: true, reason: 'ok' }),
+    });
+  });
+  await page.goto('/?license=fixture-license');
+  await expect(page).toHaveURL('/');
+  await expect(page.locator('#license-status')).toContainText('active');
+  expect(await page.evaluate(() => ({
+    license: localStorage.getItem('sb_license:scrubbed-log-casefile'),
+    verdict: JSON.parse(localStorage.getItem('sb_license_verdict:scrubbed-log-casefile') ?? '{}').valid,
+  }))).toEqual({ license: 'fixture-license', verdict: true });
+  expect(verificationUrls).toEqual(['https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/verify?license=fixture-license']);
 });
 
 test('@claim:offline-reload reloads the interactive demo without HTTP cache', async ({ page, context }) => {
@@ -71,8 +106,52 @@ test('keyboard, 200% text, touch targets, and accessibility pass at 390px', asyn
     expect((await link.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(44);
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
   }
+  for (const link of await page.locator('header nav a').all()) {
+    expect((await link.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+});
+
+for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  test(`hero evidence and caption stay within the ${viewport.width}px viewport`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const bounds = await page.locator('.hero-art').evaluate((figure) => {
+      const box = figure.getBoundingClientRect();
+      const image = figure.querySelector('img')?.getBoundingClientRect();
+      const caption = figure.querySelector('figcaption')?.getBoundingClientRect();
+      const stamp = getComputedStyle(figure, '::before');
+      const stampRight = Number.parseFloat(stamp.right);
+      return { box, image, caption, stampRight, width: innerWidth };
+    });
+    for (const rectangle of [bounds.box, bounds.image, bounds.caption]) {
+      expect(rectangle?.left ?? -1).toBeGreaterThanOrEqual(0);
+      expect(rectangle?.right ?? Infinity).toBeLessThanOrEqual(viewport.width);
+    }
+    expect(bounds.stampRight).toBeGreaterThanOrEqual(0);
+  });
+}
+
+test('the ?demo=1 entry point opens the isolated demo with its banner and reset control', async ({ page }) => {
+  await page.goto('/?demo=1');
+  await expect(page).toHaveURL('/demo/');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+});
+
+test('normal routes keep navigation, announce the destination, and focus its h1 on forward and back', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('header nav a')).toHaveText(['Demo', 'How it works', 'Install', 'Privacy']);
+  await page.locator('header').getByRole('link', { name: 'Privacy' }).click();
+  await expect(page).toHaveURL('/privacy/');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-announcer')).toContainText('Privacy — Scrubbed Log Casefile');
+  await page.goBack();
+  await expect(page).toHaveURL('/');
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('#route-announcer')).toContainText('Scrubbed Log Casefile — scrub logs before sharing');
 });
 
 for (const path of ['/', '/demo/', '/privacy/', '/terms/', '/404.html']) {
