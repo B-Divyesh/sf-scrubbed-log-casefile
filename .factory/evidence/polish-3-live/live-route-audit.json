@@ -1,0 +1,47 @@
+{
+  "origin": "https://scrubbed-log-casefile.sociobot.in",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "consoleErrors": 0,
+      "axeViolations": 0,
+      "title": "Scrubbed Log Casefile — scrub logs before sharing"
+    },
+    {
+      "path": "/demo/",
+      "status": 200,
+      "consoleErrors": 0,
+      "axeViolations": 0,
+      "title": "Demo — Scrubbed Log Casefile"
+    },
+    {
+      "path": "/privacy/",
+      "status": 200,
+      "consoleErrors": 0,
+      "axeViolations": 0,
+      "title": "Privacy — Scrubbed Log Casefile"
+    },
+    {
+      "path": "/terms/",
+      "status": 200,
+      "consoleErrors": 0,
+      "axeViolations": 0,
+      "title": "Terms — Scrubbed Log Casefile"
+    },
+    {
+      "path": "/404.html",
+      "status": 200,
+      "consoleErrors": 0,
+      "axeViolations": 0,
+      "title": "Page not found — Scrubbed Log Casefile"
+    }
+  ],
+  "offline": {
+    "reloaded": true,
+    "scrubbed": true
+  },
+  "unknownRoute": {
+    "status": 404
+  }
+}

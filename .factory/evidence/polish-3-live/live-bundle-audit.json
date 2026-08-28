@@ -1,0 +1,8 @@
+{
+  "origin": "https://scrubbed-log-casefile.sociobot.in",
+  "homeBundle": "https://scrubbed-log-casefile.sociobot.in/assets/home-B2AOS7T0.js",
+  "expected": [
+    "Your last license status is unchanged. Try again when connected.",
+    "Paste a log fragment or load the sample, then try again."
+  ]
+}

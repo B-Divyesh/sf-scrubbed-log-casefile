@@ -1,0 +1,73 @@
+{
+  "origin": "https://scrubbed-log-casefile.sociobot.in",
+  "routes": [
+    {
+      "path": "/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "axe": 0,
+      "errors": []
+    },
+    {
+      "path": "/",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "axe": 0,
+      "errors": []
+    },
+    {
+      "path": "/demo/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "axe": 0
+    },
+    {
+      "path": "/privacy/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "axe": 0
+    },
+    {
+      "path": "/terms/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "axe": 0
+    },
+    {
+      "path": "/404.html",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "axe": 0
+    }
+  ],
+  "checks": [
+    {
+      "privacy": true,
+      "demo": true,
+      "redaction": true,
+      "freshDemoBoundary": true,
+      "reset": true,
+      "focus": true,
+      "copy": true,
+      "noConsoleErrors": false,
+      "noTracking": true,
+      "noInputRequests": true,
+      "unknownRoute": true
+    }
+  ],
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ]
+}
