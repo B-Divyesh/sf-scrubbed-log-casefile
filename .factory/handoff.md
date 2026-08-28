@@ -1,98 +1,71 @@
-# Polish 1 handoff — PASS
+# Adversarial review 2 handoff — FAIL
 
 Date: 2026-08-28 UTC
 
-Work order: `scrubbed-log-casefile-polish-1`
+Work order: `scrubbed-log-casefile-review-2`
 
-Base: `b78bdbc70472c94346f2913006de2e4786e1937d`
-Repair commit: `893a2043f3b63428c1e1a9751209040e9697fc51`
+Reviewed commit: `59a3167fbfb9fc753008d907e84c522c6ba60560`
 
 ## Delivered
 
-- Closed every finding in `.factory/review-1.md`; the detailed finding-to-fix
-  map is in `.factory/polish-1.md`.
-- Removed the untestable payment and refund promises rather than representing
-  an external billing contract as locally proven.
-- Strengthened the primary browser privacy claim to exercise scrubbing with a
-  unique sentinel and inspect request bodies, URLs, all browser storage, and
-  cache responses.
-- Added the documented `?demo=1` one-click entry. It redirects to the
-  in-memory `/demo/` sandbox, where the sample banner, reset action, and
-  start-for-real link remain visible.
-- Contained the hero art and readable caption at 390px and 1440px without
-  changing the concrete-and-moss visual thesis.
-- Added consistent navigation, route-level polite announcements, and focused
-  `<h1>` landmarks after in-site forward and Back/Forward navigation.
-- Added a fixture-backed license-storage claim, updated the copy audit and
-  demo documentation, and added the verb-first catalog description.
+- Performed a fresh phone and desktop first-read review of the live product.
+- Audited every landing and README sentence, headings, controls, terminology,
+  and public claims.
+- Exercised the browser demo, reset, start-for-real path, storage isolation,
+  request privacy, offline reload, and the CLI demo from a temporary directory.
+- Ran all 17 declared claim commands independently from a clean clone.
+- Rechecked every finding in `.factory/review-1.md` against live behavior and
+  current code.
+- Crawled all links; checked metadata, 404 behavior, navigation focus, default
+  touch targets, reduced motion, and live accessibility at 390 and 1440.
+- Wrote the complete result to `.factory/review-2.md`. No product code was
+  changed.
 
-## Verification evidence
+## Verdict and known gaps
 
-### Clean clone and claim gate
+**FAIL.** The review contains six blocking findings, including reopened
+F-1-2 and F-1-4. The phone demo hides its ready output below the first screen;
+the license reconnect message is false; the stable-token claim test does not
+pack two real casefiles; and browser recognition is absent from the claim
+inventory. Medium and minor findings cover further claim gaps, demo fidelity,
+mobile facts/touch targets, footer structure, missing casefile inspection, and
+plain-language copy.
 
-Fresh clone: `/tmp/casefile-clean.u0igUC/repo` from repair commit, followed by
-`npm ci` (61 packages, 0 vulnerabilities). Every one of the 17 commands in
-`.factory/claims.json` was run independently and passed:
+See `.factory/review-2.md` for exact quotes, evidence, and concrete fixes.
 
-`browser-local`, `license-storage`, `offline-reload`, `cli-demo`,
-`credential-redaction`, `encrypted-casefile`, `aes-256`, `password-env`,
-`machine-json`, `exit-codes`, `custom-rules`, `stable-tokens`,
-`atomic-output`, `single-binary`, `cli-local`, `team-policy-pack`, and
-`cli-recording`.
+## Verification
 
-### Local full suite
+- 17/17 individual claim commands: passed from
+  `/tmp/casefile-review2-clean.BsThPT/repo`.
+- `npm test`: 3/3 passed.
+- `npm run typecheck`; `npm run lint`: passed.
+- `npm run build`: passed; output `dist/site`.
+- `npm run test:e2e -- --reporter=line`: 31/31 passed; review identifies the
+  missing assertions that allow the defects through.
+- `cargo fmt --check`; `cargo clippy --all-targets -- -D warnings`: passed.
+- `cargo test --all-targets`: 4 library and 12 integration tests passed.
+- Live Playwright axe: zero WCAG 2 AA violations across five routes at both
+  viewports.
+- Factory `verify-url.sh`: passed in 823 ms with no console errors.
+- Link crawl: all 14 discovered URLs returned 200 after redirects.
+- Standalone axe CLI was attempted but could not create its Selenium Chrome
+  session; the pinned Playwright axe checks completed successfully.
 
-- `npm test` — 3/3 passed.
-- `npm run typecheck` and `npm run lint` — passed.
-- `npm audit --audit-level=high` — passed; 0 vulnerabilities.
-- `npm run build` — passed; output is `dist/site`. Initial home JS is 2.28 KB
-  gzip, CSS is 3.30 KB gzip, no web fonts are requested, and the hero image is
-  105,038 bytes.
-- `npm run test:e2e -- --reporter=line` — 31/31 passed, including all five
-  route metadata pages and WCAG 2 AA axe scans with zero violations.
-- `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, and
-  `cargo test --all-targets` — passed (4 library + 12 integration tests).
-- `cargo package --allow-dirty` — passed; 12 files, 72.6 KiB unpacked,
-  20.1 KiB compressed. `npm pack --dry-run` also passed.
-- Factory `verify-url.sh` against local build — passed; no console errors,
-  title/lang/main/one h1/alt/button checks passed. The standalone axe CLI was
-  attempted with the provisioned Chrome and could not create its Selenium
-  session; the pinned `@axe-core/playwright` suite above is the successful
-  browser accessibility evidence.
-
-### Deployment and cold live recheck
-
-- Deployed `dist/site` with `/opt/fleet/lib/deploy-static.sh
-  scrubbed-log-casefile dist/site`.
-- Deployment ID: `14c4f411-a83c-477f-9f2b-8135eb531d92`.
-- Live URL: <https://scrubbed-log-casefile.sociobot.in>.
-- `verify-url.sh` cold live check passed in 704 ms with no console errors;
-  evidence is `/tmp/casefile-live.zlmSAI/verify.json`.
-- Cold live Playwright recheck passed at 1440×900 and 390×844: contained hero
-  figure/caption, `?demo=1` redirect/banner/reset, no payment/refund copy,
-  header consistency, focused and announced `/` → `/privacy/` → Back flow,
-  sentinel scrub privacy across request URL/body/storage/IndexedDB/cache, and
-  HTTP 404. Screenshots are `/tmp/casefile-live.zlmSAI/recheck-desktop.png`
-  and `/tmp/casefile-live.zlmSAI/recheck-mobile.png`.
-
-## How to run
+## Reproduce the review gates
 
 ```sh
 npm ci
 npm test
 npm run typecheck
 npm run lint
-npm run test:e2e
+npm run test:e2e -- --reporter=line
 npm run build
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test --all-targets
-casefile demo --json
+cargo run --quiet -- demo --json
 ```
 
-Use `https://scrubbed-log-casefile.sociobot.in/?demo=1` for the browser demo.
-
-## Known gaps
-
-None. The standalone axe CLI is environment-limited by its Selenium Chrome
-session; its equivalent pinned Playwright axe checks pass on every route.
+Use fresh browser contexts at 390×844 and 1440×900 against
+<https://scrubbed-log-casefile.sociobot.in>. The review records the additional
+manual paths not covered by the current suite.
