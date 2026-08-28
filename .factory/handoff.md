@@ -1,3 +1,59 @@
+# Verification handoff — PASS
+
+Date: 2026-08-28 UTC
+Verified candidate: `d57f75099e5bd0b5c4c5d105537a1121b5e7f094`
+Live URL: <https://scrubbed-log-casefile.sociobot.in>
+
+**PASS — release candidate accepted.** The complete independent evidence is
+in `.factory/verification-3.md`. No defects were found.
+
+## Verification summary
+
+- All 16 declared claim commands passed independently after `npm ci`; the
+  complete Playwright suite passed 26/26.
+- `npm test`, typecheck, lint, Cargo fmt/clippy/tests, production build,
+  `cargo package`, and npm pack dry-run all passed. `npm audit` found zero
+  high vulnerabilities.
+- A fresh consumer installed the packaged CLI, which exposed only `casefile`.
+  `casefile demo --json` created two sample files, an encrypted archive, and
+  eight redactions. Normal, parser-error, and missing-password recovery paths
+  were checked.
+- The live deployment exactly matches the candidate's built pages, assets,
+  service worker, manifest, robots, and sitemap. Home SHA-256 is
+  `931b212107b0d4e6d87377b5c923c7ba566b2bac9266a732b47d4eb88fc2b339`.
+- Live desktop and 390px checks passed: cold first read, one-click sample
+  demo, keyboard/focus, 200% text, reduced motion, offline reload, privacy
+  requests/storage, headers/caching, and axe scans with zero violations.
+- License verification allowed 30 requests in the observed window, then
+  returned 429 with `Retry-After: 4`.
+
+## How to verify
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run lint
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test --all-targets
+npm run test:e2e
+npm run build
+cargo package --allow-dirty
+```
+
+Use `casefile demo --json` for the shipped CLI sandbox and
+`https://scrubbed-log-casefile.sociobot.in/demo/` for the browser sandbox.
+
+## Known verification limitations
+
+The repository has no `verify-url.sh`. Fresh Lighthouse execution was
+inconclusive because the available launcher could not connect to the
+provisioned Chromium; fresh bundle-budget, Playwright, and axe evidence is in
+the verification report.
+
+---
+
 # Repair handoff — release blockers resolved
 
 Date: 2026-08-28 UTC
