@@ -1,4 +1,30 @@
-# Verification handoff — PASS
+# Review 1 handoff — FAIL
+
+Date: 2026-08-28 UTC
+Reviewer work order: `scrubbed-log-casefile-review-1`
+
+This review made no product-code changes. It added
+`.factory/review-1.md`, ran the claim commands from a clean clone, and
+rechecked the live site at 390px and desktop.
+
+## Verification run
+
+- `npm ci` in `/tmp/casefile-review-clean.kufX5v/repo`
+- Every one of the 16 commands listed in `.factory/claims.json` passed
+  independently.
+- Live one-click demo, reset, request log, local/session/IndexedDB/Cache
+  isolation, metadata/404, link crawl, headers, and cold first read were
+  checked.
+
+## Remaining work
+
+The review verdict is **FAIL**. See `.factory/review-1.md` for the five
+findings and exact remediation. The blockers are untested payment/refund
+claims and a privacy regression that does not test the claimed scrub flow.
+
+---
+
+# Previous verification handoff — PASS
 
 Date: 2026-08-28 UTC
 Verified candidate: `d57f75099e5bd0b5c4c5d105537a1121b5e7f094`
