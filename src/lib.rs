@@ -187,7 +187,7 @@ pub fn builtin_rule_specs() -> Vec<RuleSpec> {
         RuleSpec {
             name: "credential-assignment".into(),
             kind: "SECRET".into(),
-            pattern: r#"(?i)(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*["']?(?P<value>[^\s"',;&}]+)"#.into(),
+            pattern: r#"(?i)["']?(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token)["']?\s*[:=]\s*["']?(?P<value>[^\s"',;&}]+)"#.into(),
         },
         RuleSpec {
             name: "jwt".into(),
@@ -228,6 +228,9 @@ mod tests {
         assert_ne!(tokens[0], tokens[2]);
         assert_eq!(out.hits["email"], 3);
         assert!(!out.text.contains("a@b.dev"));
+        let other_case = Redactor::new(Policy::compile(Vec::new(), true).unwrap(), [8; 32])
+            .scrub("owner=a@b.dev");
+        assert_ne!(tokens[0], other_case.text.split('=').nth(1).unwrap());
     }
 
     #[test]
@@ -260,5 +263,28 @@ mod tests {
         ] {
             assert!(!out.text.contains(secret));
         }
+    }
+
+    #[test]
+    fn default_policy_scrubs_quoted_json_and_yaml_credentials() {
+        let policy = Policy::compile(Vec::new(), true).unwrap();
+        let out = Redactor::new(policy, [4; 32]).scrub(
+            r#"{
+  "password": "json-secret-value",
+  "api_key": "quoted-api-key-value",
+  'access-token': 'single-quoted-value'
+}
+secret: yaml-secret-value"#,
+        );
+        for secret in [
+            "json-secret-value",
+            "quoted-api-key-value",
+            "single-quoted-value",
+            "yaml-secret-value",
+        ] {
+            assert!(!out.text.contains(secret), "credential survived: {secret}");
+        }
+        assert_eq!(out.hits["credential-assignment"], 4);
+        assert!(out.text.contains(r#""password": "<SECRET:"#));
     }
 }

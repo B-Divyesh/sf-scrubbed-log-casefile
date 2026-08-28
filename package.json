@@ -1,6 +1,6 @@
 {
   "name": "scrubbed-log-casefile-site",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,11 +9,14 @@
     "build": "vite build",
     "build:site": "vite build",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",
     "@playwright/test": "1.58.2",
+    "@types/node": "24.3.0",
     "typescript": "5.9.2",
     "vite": "7.3.6",
     "vitest": "3.2.7"

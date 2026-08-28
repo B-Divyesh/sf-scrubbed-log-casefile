@@ -1,4 +1,4 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, error::ErrorKind};
 use rand::RngCore;
 use scrubbed_log_casefile::{Policy, PolicyFile, Redactor};
 use serde::Serialize;
@@ -30,6 +30,15 @@ struct Cli {
 enum Command {
     /// Scrub files/directories and create an encrypted ZIP casefile
     Pack(PackArgs),
+    /// Build a casefile from bundled sample incident data in a temporary directory
+    Demo(DemoArgs),
+}
+
+#[derive(Args)]
+struct DemoArgs {
+    /// Emit one machine-readable result object
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -101,6 +110,16 @@ struct ErrorSummary<'a> {
 }
 
 #[derive(Serialize)]
+struct DemoSummary {
+    ok: bool,
+    output: String,
+    sample_directory: String,
+    password: &'static str,
+    files_written: usize,
+    redactions: u64,
+}
+
+#[derive(Serialize)]
 struct Manifest {
     format: &'static str,
     version: &'static str,
@@ -134,44 +153,138 @@ struct InputFile {
 }
 
 fn main() -> ExitCode {
-    let cli = Cli::parse();
-    match cli.command {
-        Command::Pack(args) => {
-            let json = args.json;
-            match pack(args) {
-                Ok(summary) => {
-                    if json {
-                        println!("{}", serde_json::to_string(&summary).expect("serializable"));
-                    } else {
-                        eprintln!(
-                            "sealed {} file(s) in {} ({} redactions; {} skipped)",
-                            summary.files_written,
-                            summary.output,
-                            summary.redactions,
-                            summary.files_skipped
-                        );
-                        eprintln!("share the password through a separate channel");
-                    }
-                    ExitCode::SUCCESS
-                }
-                Err(error) => {
-                    if json {
-                        println!(
-                            "{}",
-                            serde_json::to_string(&ErrorSummary {
-                                ok: false,
-                                error: &error.message
-                            })
-                            .expect("serializable")
-                        );
-                    } else {
-                        eprintln!("casefile: {}", error.message);
-                    }
-                    ExitCode::from(if error.usage { 2 } else { 1 })
-                }
+    let wants_json = env::args_os().any(|arg| arg == "--json");
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(error) => {
+            if matches!(
+                error.kind(),
+                ErrorKind::DisplayHelp | ErrorKind::DisplayVersion
+            ) {
+                let _ = error.print();
+                return ExitCode::SUCCESS;
             }
+            if wants_json {
+                let message = error.to_string();
+                println!(
+                    "{}",
+                    serde_json::to_string(&ErrorSummary {
+                        ok: false,
+                        error: message.trim()
+                    })
+                    .expect("serializable")
+                );
+            } else {
+                let _ = error.print();
+            }
+            return ExitCode::from(2);
         }
+    };
+    match cli.command {
+        Command::Pack(args) => run_pack(args),
+        Command::Demo(args) => run_demo(args),
     }
+}
+
+fn run_pack(args: PackArgs) -> ExitCode {
+    let json = args.json;
+    match pack(args) {
+        Ok(summary) => {
+            if json {
+                println!("{}", serde_json::to_string(&summary).expect("serializable"));
+            } else {
+                eprintln!(
+                    "sealed {} file(s) in {} ({} redactions; {} skipped)",
+                    summary.files_written,
+                    summary.output,
+                    summary.redactions,
+                    summary.files_skipped
+                );
+                eprintln!("share the password through a separate channel");
+            }
+            ExitCode::SUCCESS
+        }
+        Err(error) => print_app_error(error, json),
+    }
+}
+
+fn run_demo(args: DemoArgs) -> ExitCode {
+    match build_demo() {
+        Ok(summary) => {
+            if args.json {
+                println!("{}", serde_json::to_string(&summary).expect("serializable"));
+            } else {
+                println!("Demo casefile: {}", summary.output);
+                println!("Sample input: {}", summary.sample_directory);
+                println!("Archive password: {}", summary.password);
+                println!(
+                    "Sealed {} files after {} redactions. Nothing was written outside this demo directory.",
+                    summary.files_written, summary.redactions
+                );
+            }
+            ExitCode::SUCCESS
+        }
+        Err(error) => print_app_error(error, args.json),
+    }
+}
+
+fn print_app_error(error: AppError, json: bool) -> ExitCode {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string(&ErrorSummary {
+                ok: false,
+                error: &error.message
+            })
+            .expect("serializable")
+        );
+    } else {
+        eprintln!("casefile: {}", error.message);
+    }
+    ExitCode::from(if error.usage { 2 } else { 1 })
+}
+
+const DEMO_PASSWORD: &str = "casefile-demo-password";
+
+fn build_demo() -> Result<DemoSummary, AppError> {
+    let temporary = tempfile::Builder::new()
+        .prefix("casefile-demo-")
+        .tempdir()
+        .map_err(|error| AppError::runtime(format!("cannot create demo directory: {error}")))?;
+    let incident = temporary.path().join("incident");
+    fs::create_dir(&incident)
+        .map_err(|error| AppError::runtime(format!("cannot create demo input: {error}")))?;
+    fs::write(
+        incident.join("app.log"),
+        include_str!("../examples/incident/app.log"),
+    )
+    .and_then(|_| {
+        fs::write(
+            incident.join("config.json"),
+            include_str!("../examples/incident/config.json"),
+        )
+    })
+    .map_err(|error| AppError::runtime(format!("cannot write demo input: {error}")))?;
+    let output = temporary.path().join("sample.casefile.zip");
+    let pack_args = PackArgs {
+        inputs: vec![incident.clone()],
+        output: output.clone(),
+        password_env: String::new(),
+        policy: None,
+        no_default_rules: false,
+        force: false,
+        json: false,
+    };
+    let summary = pack_with_password(pack_args, DEMO_PASSWORD.to_owned())?;
+    let kept = temporary.keep();
+    Ok(DemoSummary {
+        ok: true,
+        output: output.display().to_string(),
+        sample_directory: kept.join("incident").display().to_string(),
+        password: DEMO_PASSWORD,
+        files_written: summary.files_written,
+        redactions: summary.redactions,
+    })
 }
 
 fn pack(args: PackArgs) -> Result<SuccessSummary, AppError> {
@@ -188,6 +301,20 @@ fn pack(args: PackArgs) -> Result<SuccessSummary, AppError> {
         ));
     }
 
+    pack_prevalidated(args, password)
+}
+
+fn pack_with_password(args: PackArgs, password: String) -> Result<SuccessSummary, AppError> {
+    validate_output(&args.output, args.force)?;
+    if password.chars().count() < 12 {
+        return Err(AppError::usage(
+            "archive password must be at least 12 characters",
+        ));
+    }
+    pack_prevalidated(args, password)
+}
+
+fn pack_prevalidated(args: PackArgs, password: String) -> Result<SuccessSummary, AppError> {
     let custom_rules = if let Some(path) = &args.policy {
         let raw = fs::read_to_string(path).map_err(|error| {
             AppError::usage(format!("cannot read policy '{}': {error}", path.display()))

@@ -3,7 +3,7 @@ type Rule = { name: string; kind: string; regex: RegExp };
 
 const rules: Rule[] = [
   { name: 'authorization header', kind: 'AUTH', regex: /authorization\s*[:=]\s*["']?([^\s"',;&}]+(?:\s+[^\s"',;&}]+)?)/gi },
-  { name: 'credential', kind: 'SECRET', regex: /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*["']?([^\s"',;&}]+)/gi },
+  { name: 'credential', kind: 'SECRET', regex: /["']?(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token)["']?\s*[:=]\s*["']?([^\s"',;&}]+)/gi },
   { name: 'JWT', kind: 'JWT', regex: /(eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{3,}\.[A-Za-z0-9_-]{3,})/g },
   { name: 'email', kind: 'EMAIL', regex: /([A-Za-z0-9.!#$%&'*+/?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)/g },
   { name: 'IPv4', kind: 'IPV4', regex: /\b((?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3})\b/g },

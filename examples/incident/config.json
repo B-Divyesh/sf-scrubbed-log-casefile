@@ -1,0 +1,7 @@
+{
+  "service": "invoice-worker",
+  "owner": "ria@example.com",
+  "server": "10.2.3.44",
+  "password": "json-demo-password",
+  "api_key": "json-demo-api-key"
+}

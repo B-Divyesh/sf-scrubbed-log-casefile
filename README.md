@@ -1,26 +1,31 @@
-# Scrubbed Log Casefile
+# Scrub incident logs before sharing
 
-`casefile` turns logs, traces, and configuration into one password-encrypted
-ZIP you can hand to a vendor or teammate. It runs locally, replaces repeated
-values with stable tokens, and adds a manifest of rule hits without recording
-the sensitive values.
+Scrubbed Log Casefile is for engineers escalating a bug. It replaces common
+credentials and identifiers while keeping repeated values useful inside one
+case. The result is an encrypted ZIP with a value-free rule manifest.
 
-It is for engineers who need a reproducible escalation artifact—not log
-hosting, telemetry, or a claim of complete PII detection.
+It is a local CLI, not a log host or complete PII detector. Review every
+casefile before sharing it.
 
-## Install
+## Try the bundled demo
 
-Build the single binary with stable Rust:
+Build the single `casefile` binary, then run the two-file sample:
 
 ```sh
 cargo install --path .
-casefile --help
+casefile demo
 ```
 
-## Usage
+The command prints its temporary sample directory, encrypted archive, and demo
+password. The same sample is committed under `examples/incident/`.
 
-Scrub a directory with the built-in policy. The password is read from an
-environment variable so it does not enter shell history or process arguments:
+The browser demo is available at
+<https://scrubbed-log-casefile.sociobot.in/demo/>. It works offline after the
+first visit. Scrub input stays in the tab and is not saved.
+
+## Pack an incident
+
+Keep the password out of shell arguments:
 
 ```sh
 export CASEFILE_PASSWORD='use-a-long-unique-passphrase'
@@ -29,17 +34,17 @@ casefile pack ./incident \
   --password-env CASEFILE_PASSWORD
 ```
 
-Inspect the safe summary from automation:
+The built-in policy covers common private keys, URL credentials,
+authorization headers, credential assignments, JWTs, emails, and IPv4
+addresses. Quoted JSON and YAML credential keys are supported.
 
-```sh
-casefile pack app.log trace.json \
-  --output issue-1842.zip \
-  --password-env CASEFILE_PASSWORD \
-  --json
-```
+Repeated values receive the same token inside one casefile. Separate
+casefiles use different salts. Existing output is preserved unless `--force`
+is present, and a failed pack leaves no temporary archive.
 
-Add project-owned rules in JSON. A named `value` capture keeps surrounding
-context while replacing only the captured value:
+## Add a project rule
+
+A named `value` capture replaces only the sensitive value:
 
 ```json
 {
@@ -54,58 +59,52 @@ context while replacing only the captured value:
 ```
 
 ```sh
-casefile pack ./incident --policy casefile-policy.json \
-  --output vendor.zip --password-env CASEFILE_PASSWORD
+casefile pack ./incident \
+  --policy casefile-policy.json \
+  --output vendor.zip
 ```
 
-Use `--no-default-rules` only after reviewing your custom policy. Existing
-outputs are never overwritten unless `--force` is supplied. Symlinks and
-binary files are skipped and recorded in the manifest; incomplete temporary
-archives are removed automatically.
+`--json` writes one machine-readable success or error object. Exit codes are
+`0` for success, `2` for invalid input, and `1` for a runtime failure.
 
-Exit codes are `0` success, `2` invalid input/configuration, and `1` runtime
-failure. `--json` writes a machine-readable success or error object to stdout.
+## Privacy and security limits
 
-## Archive contents
+The CLI package contains no network or telemetry client. ZIP entries use
+AES-256 encryption with the user-held password. A manifest records file
+fingerprints, rule names, and hit counts without matched values.
 
-- scrubbed input files with the original relative layout
-- `casefile-manifest.json` with file hashes, byte counts, skipped-file reasons,
-  rule names and hit counts—never matched values
+Rules cannot detect every secret or identifier. Inspect the scrub policy and
+send the archive password through a separate channel.
 
-Stable placeholders such as `<EMAIL:8F10B4A7>` use a random per-casefile salt.
-The same value maps to the same placeholder inside one archive, while separate
-archives cannot be correlated.
+## Optional team pack
+
+The CLI and safety features remain MIT-licensed. A $19 one-time license adds
+four policy starters for AWS, Kubernetes, PostgreSQL, and HTTP traces. Payment
+and refunds use the Sociobot billing service.
 
 ## Develop and verify
 
 ```sh
-cargo test
+cargo test --all-targets
+cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 npm ci
 npm test
-npm run build        # static site -> dist/site
-npm run build:site   # equivalent explicit site build
+npm run typecheck
+npm run test:e2e
+npm run build:site
 cargo package --allow-dirty
-npm pack --dry-run
 ```
 
-Run the landing/docs site with `npm run dev`. It includes a browser-only live
-redaction preview; entered text never leaves the page.
-
-## Privacy and security notes
-
-No telemetry or network calls exist in the CLI. ZIP entries use WinZip AES-256
-encryption, and the password is user-held. Rule-based scrubbing cannot prove
-that every secret or identifier was found: review the output policy and share
-the password through a separate channel. See the site [privacy](site/privacy/index.html)
-and [terms](site/terms/index.html) pages for the optional license unlock.
+Every public claim and its sandbox command is listed in
+`.factory/claims.json`. Demo isolation is documented in `.factory/demo.md`.
 
 ## Deploy
 
-The factory deploys `dist/site`; this repository does not modify DNS, billing,
-or infrastructure. The public site is intended for
-<https://scrubbed-log-casefile.sociobot.in>.
+`npm run build:site` writes the static site to `dist/site`. The factory deploys
+that directory to <https://scrubbed-log-casefile.sociobot.in>. This repository
+does not change DNS, billing, or other infrastructure.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

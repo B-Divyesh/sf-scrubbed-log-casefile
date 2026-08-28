@@ -28,7 +28,7 @@ byId<HTMLButtonElement>('scrub-button').addEventListener('click', () => {
 });
 
 byId<HTMLButtonElement>('load-example').addEventListener('click', () => {
-  rawLog.value = '2026-08-28 ERROR login failed user=ria@example.com ip=10.2.3.44\nretry user=ria@example.com\npassword=hunter2\nAuthorization: Bearer abcdefghijklmnop';
+  rawLog.value = '2026-08-28 ERROR login failed user=ria@example.com ip=10.2.3.44\nretry user=ria@example.com\n"password": "json-demo-password"\nAuthorization: Bearer abcdefghijklmnop';
   rawLog.focus();
 });
 
@@ -119,4 +119,4 @@ byId<HTMLButtonElement>('download-pack').addEventListener('click', () => {
   URL.revokeObjectURL(link.href);
 });
 
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => undefined));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => undefined));

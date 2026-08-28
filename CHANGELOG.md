@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 - 2026-08-28
+
+- Scrub quoted JSON and YAML credential assignments.
+- Add a bundled CLI demo and isolated one-click browser demo.
+- Emit JSON for command-line parse errors when `--json` is present.
+- Add versioned offline precaching, response policy, 404, metadata, and resize fixes.
+
 All notable changes follow Keep a Changelog. This project uses semantic
 versioning and begins at `0.1.0`.
 

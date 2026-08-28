@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#121512" />
+    <meta name="description" content="Try Scrubbed Log Casefile with a ready incident sample. Demo changes are never saved." />
+    <link rel="canonical" href="https://scrubbed-log-casefile.sociobot.in/demo/" />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Demo — Scrubbed Log Casefile" />
+    <meta property="og:description" content="Try local log scrubbing with a ready incident sample." />
+    <meta property="og:image" content="https://scrubbed-log-casefile.sociobot.in/assets/casefile-share.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Demo — Scrubbed Log Casefile</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <aside class="demo-banner" aria-label="Demo mode"><strong>Demo — sample data, nothing is saved</strong><div><button class="text-button" id="reset-demo" type="button">Reset demo</button><a href="/#install">Start for real</a></div></aside>
+    <header class="site-header"><a class="wordmark" href="/" aria-label="Scrubbed Log Casefile home"><span aria-hidden="true">[////]</span> CASEFILE</a><nav aria-label="Primary navigation"><a class="nav-command" href="/#install">Install</a></nav></header>
+    <main id="main" class="demo-page" tabindex="-1">
+      <section class="section demo" aria-labelledby="demo-page-title">
+        <div class="section-heading"><p class="eyebrow">READY INCIDENT / INC-1842</p><h1 id="demo-page-title" tabindex="-1">Scrub a sample incident</h1><p>The scrubbed result is ready below. Edit the sample and run it again.</p></div>
+        <div class="demo-grid">
+          <div class="editor-block"><div class="editor-label"><label for="raw-log">Sample incident fragment</label></div><textarea id="raw-log" spellcheck="false" rows="10" aria-describedby="demo-help"></textarea><p id="demo-help" class="hint">This demo uses memory only. Reloading restores the sample.</p><button class="button primary demo-run" id="scrub-button" type="button">Scrub this fragment</button></div>
+          <div class="editor-block output-block"><div class="editor-label"><span id="output-label">Scrubbed result</span><button class="text-button" id="copy-output" type="button">Copy result</button></div><pre id="scrubbed-output" tabindex="0" aria-labelledby="output-label"></pre><div class="demo-summary" id="demo-summary" aria-live="polite"></div></div>
+        </div>
+      </section>
+    </main>
+    <footer><p><span aria-hidden="true">[////]</span> Scrubbed Log Casefile</p><nav aria-label="Legal links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav><p>Built by Param Factory · v0.1.1</p></footer>
+    <script type="module" src="/src/demo-page.ts"></script>
+  </body>
+</html>

@@ -13,4 +13,11 @@ describe('browser preview', () => {
   it('returns an unchanged empty value', () => {
     expect(scrubPreview('')).toEqual({ text: '', counts: {} });
   });
+  it('removes credentials behind quoted JSON and YAML keys', () => {
+    const result = scrubPreview('{"password":"json-secret","api_key":"api-secret"}\nsecret: yaml-secret');
+    expect(result.text).not.toContain('json-secret');
+    expect(result.text).not.toContain('api-secret');
+    expect(result.text).not.toContain('yaml-secret');
+    expect(result.counts.credential).toBe(3);
+  });
 });

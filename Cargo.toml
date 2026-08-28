@@ -1,6 +1,6 @@
 [package]
 name = "scrubbed-log-casefile"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Offline, stable-token log redaction and encrypted casefile packaging"
 license = "MIT"
@@ -8,7 +8,7 @@ repository = "https://github.com/B-Divyesh/sf-scrubbed-log-casefile"
 readme = "README.md"
 keywords = ["logs", "redaction", "privacy", "cli"]
 categories = ["command-line-utilities"]
-include = ["/Cargo.toml", "/Cargo.lock", "/src/**", "/tests/**", "/README.md", "/LICENSE", "/CHANGELOG.md"]
+include = ["/Cargo.toml", "/Cargo.lock", "/src/**", "/tests/**", "/examples/**", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 
 [[bin]]
 name = "casefile"

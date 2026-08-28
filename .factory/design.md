@@ -60,3 +60,6 @@ are original CSS geometry rather than third-party icons.
 
 The image clarifies the distinction between deleting logs and masking only the
 sensitive spans while keeping repeated tokens useful.
+
+The 1200×630 social image is a center crop of that original hero. The 180px
+touch icon is a local raster rendering of the hand-authored SVG redaction mark.

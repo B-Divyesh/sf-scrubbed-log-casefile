@@ -1,0 +1,86 @@
+[
+  {
+    "id": "browser-local",
+    "claim": "The browser demo sends and saves no scrub input.",
+    "where": "landing preview, demo banner, privacy page, README",
+    "test": "npm run test:e2e -- --grep '@claim:browser-local'",
+    "sandbox": "fresh browser context; record every request; edit and reset sample; assert same-origin requests and empty storage"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "The demo works offline after the first visit.",
+    "where": "landing facts, README",
+    "test": "npm run test:e2e -- --grep '@claim:offline-reload'",
+    "sandbox": "fresh browser context; activate service worker; clear HTTP cache; set offline; reload and scrub new input"
+  },
+  {
+    "id": "cli-demo",
+    "claim": "casefile demo creates a real casefile from two bundled sample files.",
+    "where": "landing install, README",
+    "test": "npm run test:e2e -- --grep '@claim:cli-demo'",
+    "sandbox": "run the CLI demo from a clean checkout; assert two inputs, at least seven redactions, and an output archive"
+  },
+  {
+    "id": "credential-redaction",
+    "claim": "Built-in rules replace private keys, URL and header credentials, quoted assignments, JWTs, emails, and IPv4 addresses.",
+    "where": "landing, README",
+    "test": "npm run test:e2e -- --grep '@claim:credential-redaction'",
+    "sandbox": "pack representative config; decrypt entry and manifest; assert every seeded built-in class is absent and counted"
+  },
+  {
+    "id": "encrypted-casefile",
+    "claim": "The CLI writes encrypted ZIP entries and a value-free redaction manifest.",
+    "where": "landing workflow and pricing, README",
+    "test": "npm run test:e2e -- --grep '@claim:encrypted-casefile'",
+    "sandbox": "pack seeded input; decrypt file and manifest with the user password; assert raw values are absent"
+  },
+  {
+    "id": "machine-json",
+    "claim": "--json returns a machine-readable object for success, validation, and parse errors.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep '@claim:machine-json'",
+    "sandbox": "invoke an incomplete pack command with --json; parse stdout and assert exit 2 with empty stderr"
+  },
+  {
+    "id": "custom-rules",
+    "claim": "Project-owned JSON rules can replace a named value while preserving its context.",
+    "where": "landing pricing, README",
+    "test": "npm run test:e2e -- --grep '@claim:custom-rules'",
+    "sandbox": "pack sample with documented tenant rule; decrypt and assert only the named capture changed"
+  },
+  {
+    "id": "stable-tokens",
+    "claim": "Repeated values receive the same case-scoped token, while another case uses a different token.",
+    "where": "landing workflow, README",
+    "test": "npm run test:e2e -- --grep '@claim:stable-tokens'",
+    "sandbox": "scrub repeated and distinct emails in two cases; compare same-case and cross-case tokens"
+  },
+  {
+    "id": "atomic-output",
+    "claim": "A failed pack preserves an existing output and leaves no temporary archive.",
+    "where": "landing install, README",
+    "test": "npm run test:e2e -- --grep '@claim:atomic-output'",
+    "sandbox": "seed an existing archive; run pack without --force; compare bytes and directory entries"
+  },
+  {
+    "id": "single-binary",
+    "claim": "The package exposes one CLI binary.",
+    "where": "landing install, README",
+    "test": "npm run test:e2e -- --grep '@claim:single-binary'",
+    "sandbox": "read Cargo package metadata and assert the only binary target is casefile"
+  },
+  {
+    "id": "cli-local",
+    "claim": "The CLI contains no network or telemetry client.",
+    "where": "privacy page, README",
+    "test": "npm run test:e2e -- --grep '@claim:cli-local'",
+    "sandbox": "inspect clean Cargo metadata and CLI source for network and telemetry clients"
+  },
+  {
+    "id": "team-policy-pack",
+    "claim": "The $19 one-time team pack downloads four listed policy starters after a cached valid license.",
+    "where": "landing pricing, terms, README",
+    "test": "npm run test:e2e -- --grep '@claim:team-policy-pack'",
+    "sandbox": "seed a current valid verdict; assert price copy and inspect the downloaded JSON rule names"
+  }
+]
