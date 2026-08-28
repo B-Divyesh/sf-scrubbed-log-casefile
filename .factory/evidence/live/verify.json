@@ -1,0 +1,14 @@
+{
+  "url": "https://scrubbed-log-casefile.sociobot.in",
+  "loadMs": 2025,
+  "errors": [],
+  "a11y": {
+    "title": "Scrubbed Log Casefile — scrub logs before sharing",
+    "lang": "en",
+    "h1": 1,
+    "main": true,
+    "imgsMissingAlt": 0,
+    "buttonsUnlabeled": 0,
+    "textLength": 2990
+  }
+}

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#121512" />
+    <meta name="description" content="Scrub incident logs locally, keep repeated values useful, and package the result in an encrypted casefile." />
+    <link rel="canonical" href="https://scrubbed-log-casefile.sociobot.in/" />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Scrubbed Log Casefile — scrub logs before sharing" />
+    <meta property="og:description" content="Replace common secrets and identifiers, then build an encrypted incident casefile." />
+    <meta property="og:url" content="https://scrubbed-log-casefile.sociobot.in/" />
+    <meta property="og:image" content="https://scrubbed-log-casefile.sociobot.in/assets/casefile-share.webp" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Scrubbed Log Casefile — scrub logs before sharing" />
+    <meta name="twitter:description" content="Replace common secrets and identifiers, then build an encrypted incident casefile." />
+    <meta name="twitter:image" content="https://scrubbed-log-casefile.sociobot.in/assets/casefile-share.webp" />
+    <title>Scrubbed Log Casefile — scrub logs before sharing</title>
+    <script type="module" crossorigin src="/assets/home-DvBdr5pd.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/route-focus-Djplst2e.js">
+    <link rel="modulepreload" crossorigin href="/assets/demo-PbGF27ou.js">
+    <link rel="stylesheet" crossorigin href="/assets/route-focus-Imr9ft5e.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="offline-bar" id="offline-bar" role="status" hidden>Offline. The sample scrubber still works. Reconnect to verify a saved license.</div>
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="Scrubbed Log Casefile home"><span aria-hidden="true">[////]</span> CASEFILE</a>
+      <nav aria-label="Primary navigation"><a href="/demo/">Demo</a><a href="#workflow">How it works</a><a href="#install">Install</a><a class="nav-command" href="/privacy/">Privacy</a></nav>
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>LOCAL / OFFLINE / ENCRYPTED</span></p>
+          <h1 id="hero-title" tabindex="-1">Scrub incident logs before sharing</h1>
+          <p class="lede">For engineers escalating bugs, it keeps useful structure while replacing common credentials and identifiers.</p>
+          <ul class="trust-strip" aria-label="Product facts"><li>Scrubs in your browser</li><li>Demo works offline after one visit</li><li>CLI free · team pack $19 once</li></ul>
+          <div class="hero-actions"><a class="button primary" href="?demo=1">Try it with sample data</a><span>Opens a ready example. Nothing is saved.</span></div>
+        </div>
+        <figure class="hero-art">
+          <img src="/assets/casefile-hero.webp" width="1200" height="800" alt="Concrete evidence slab with sensitive log lines covered by moss-green strips" fetchpriority="high" />
+          <figcaption>EXAMPLE REDACTED LOG <span>Repeated values keep matching replacement tokens.</span></figcaption>
+        </figure>
+      </section>
+
+      <section class="section demo" id="preview" aria-labelledby="preview-title">
+        <div class="section-heading"><p class="eyebrow">LIVE / BROWSER-ONLY</p><h2 id="preview-title">Test an incident log fragment.</h2><p>The preview changes text in this tab. It sends no scrub input and saves no scrub input.</p></div>
+        <div class="demo-grid">
+          <div class="editor-block">
+            <div class="editor-label"><label for="raw-log">Raw incident fragment</label><button class="text-button" id="load-example" type="button">Load sample</button></div>
+            <textarea id="raw-log" spellcheck="false" rows="10" aria-describedby="demo-help">2026-08-28 ERROR login failed user=ria@example.com ip=10.2.3.44
+retry user=ria@example.com
+&quot;password&quot;: &quot;json-demo-password&quot;
+Authorization: Bearer abcdefghijklmnop</textarea>
+            <p id="demo-help" class="hint">Recognizes common emails, IPv4 addresses, credentials, bearer tokens, and JWTs.</p>
+            <button class="button primary demo-run" id="scrub-button" type="button">Scrub this fragment</button>
+          </div>
+          <div class="editor-block output-block">
+            <div class="editor-label"><span id="output-label">Scrubbed preview</span><button class="text-button" id="copy-output" type="button" disabled>Copy result</button></div>
+            <pre id="scrubbed-output" tabindex="0" aria-labelledby="output-label">Run the scrubber to create a preview.</pre>
+            <div class="demo-summary" id="demo-summary" aria-live="polite">Waiting for input.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section workflow" id="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading"><p class="eyebrow">HOW IT WORKS</p><h2 id="workflow-title">Scrub and package an incident log.</h2></div>
+        <ol class="steps">
+          <li><span class="step-number">01</span><div><h3>Collect locally</h3><p>Point one command at files or directories.</p></div></li>
+          <li><span class="step-number">02</span><div><h3>Scrub consistently</h3><p>The same value gets the same replacement within one casefile.</p></div></li>
+          <li><span class="step-number">03</span><div><h3>Create the encrypted ZIP</h3><p>A casefile is an AES-256 encrypted ZIP with rule names and counts, not matched values.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="section manifest" aria-labelledby="manifest-title">
+        <div><p class="eyebrow">CLEAR LIMITS</p><h2 id="manifest-title">Limits of rule-based log scrubbing.</h2><p>Rules cannot find every secret or identifier. Review the casefile before sharing. This is not a log host or cloud scrubber.</p></div>
+        <pre aria-label="Example manifest with rule names and counts" tabindex="0">{
+  "format": "scrubbed-log-casefile",
+  "rule_hits": {
+    "email": 14,
+    "credential-assignment": 3
+  },
+  "token_scope": "this archive"
+}</pre>
+      </section>
+
+      <section class="section install" id="install" aria-labelledby="install-title">
+        <div class="section-heading"><p class="eyebrow">VERSION 0.1.3 / MIT</p><h2 id="install-title">Build one local binary.</h2><p>Run the bundled sample first, then pack your own incident files.</p></div>
+        <div class="terminal"><div class="terminal-top"><span>BUILD + DEMO</span><button class="text-button inverse" id="copy-command" type="button">Copy command</button></div><pre id="install-command" tabindex="0"><code>cargo install --git https://github.com/B-Divyesh/sf-scrubbed-log-casefile
+casefile demo
+export CASEFILE_PASSWORD='a-long-unique-passphrase'
+casefile pack ./incident --output vendor.casefile.zip
+casefile inspect vendor.casefile.zip --extract</code></pre></div>
+        <figure class="cli-recording"><img src="/assets/casefile-demo.svg" width="960" height="390" alt="Terminal recording of casefile demo creating an encrypted sample casefile" /><figcaption>Recorded from the shipped <code>casefile demo</code> command. It creates two sample files and one casefile in a new temporary directory, then prints its paths and password.</figcaption></figure>
+        <div class="install-notes"><p><strong>Password stays out of arguments.</strong><br />Read it from <code>CASEFILE_PASSWORD</code> or another variable.</p><p><strong>A failed run leaves no partial casefile.</strong><br />Existing output remains unless you pass <code>--force</code>.</p><p><strong>Review before sharing.</strong><br /><code>casefile inspect</code> shows the manifest and can extract scrubbed files into a new temporary directory.</p></div>
+      </section>
+
+      <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
+        <div class="section-heading"><p class="eyebrow">ONE-TIME PRICING</p><h2 id="pricing-title">Free CLI and $19 team policy pack.</h2><p>The CLI stays MIT-licensed. The optional team pack adds four policy starters and a review checklist.</p></div>
+        <div class="price-grid">
+          <article class="price-card"><p class="stamp">CORE</p><h3>Casefile CLI</h3><p class="price">$0</p><ul><li>Built-in safety rules</li><li>Local casefiles</li><li>AES-256 encryption and manifest</li><li>Project-owned JSON policy files</li></ul><a class="button secondary" href="#install">Install the CLI</a></article>
+          <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP starters</li><li>Team policy review checklist</li><li>One downloadable JSON pack</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a></article>
+        </div>
+        <div class="license-panel" id="license-panel">
+          <div><h3>Restore a purchase</h3><p id="license-status" role="status">No active team-pack license on this device.</p></div>
+          <form id="license-form"><label for="license-token">License token</label><div class="field-row"><input id="license-token" name="license" autocomplete="off" required /><button class="button secondary" type="submit">Verify license</button></div></form>
+          <div class="unlocked-content" id="unlocked-content" hidden><p><strong>Team pack ready.</strong> Download the AWS, Kubernetes, PostgreSQL, and HTTP starter rules with the team review checklist.</p><button class="button primary" id="download-pack" type="button">Download policy pack</button></div>
+        </div>
+      </section>
+    </main>
+    <p class="route-announcer" id="route-announcer" aria-live="polite" aria-atomic="true"></p>
+    <footer><p><span aria-hidden="true">[////]</span> Scrub incident logs locally before sharing</p><nav aria-label="Legal and project links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-scrubbed-log-casefile">Source on GitHub</a></nav><p>Built by Param Factory · v0.1.3</p></footer>
+  </body>
+</html>
