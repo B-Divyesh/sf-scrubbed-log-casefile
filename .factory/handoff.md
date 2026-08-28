@@ -18,7 +18,8 @@ Deployment ID: `1cf8efbf-0f1e-42be-a6e4-7f90202390a6`
   viewport above the one-click sample action.
 - Made `?demo=1` enter an isolated in-memory demo with a persistent banner,
   reset, real-start path, phone-visible before/after result, and fresh salt per
-  page/reset.
+  page/reset. The shortcut exits before landing license code can read real
+  namespace values.
 - Expanded `.factory/claims.json` from 17 to 21 claims. Every claim has exactly
   one tagged observable test.
 - Added `casefile inspect <casefile> --password-env <NAME> [--extract]` for

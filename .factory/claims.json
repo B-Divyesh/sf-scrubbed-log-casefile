@@ -4,7 +4,7 @@
     "claim": "Landing and demo scrubbing send and save no scrub input, and every public route loads no third-party tracking resources.",
     "where": "landing preview, demo banner, privacy page, README",
     "test": "npm run test:e2e -- --grep '@claim:browser-local'",
-    "sandbox": "fresh browser context; scrub distinct sentinels on landing and demo; visit every public route; assert no URL, body, browser store, IndexedDB database, or Cache Storage response contains input and every request is same-origin"
+    "sandbox": "fresh browser context; scrub distinct sentinels on landing and demo; seed real license/workspace keys before the ?demo=1 transition; visit every public route; assert the real keys stay byte-identical, no URL/body/store/cache contains input, and every request is same-origin"
   },
   {
     "id": "browser-redaction",
@@ -74,7 +74,7 @@
     "claim": "The CLI reads casefile passwords from an environment variable, not a password command-line argument.",
     "where": "landing install, README",
     "test": "npm run test:e2e -- --grep '@claim:password-env'",
-    "sandbox": "inspect pack help; assert --password-env exists and no --password argument is accepted"
+    "sandbox": "inspect pack help; assert --password-env exists and no --password argument is accepted; pack successfully with a custom environment-variable name"
   },
   {
     "id": "machine-json",
@@ -106,10 +106,10 @@
   },
   {
     "id": "atomic-output",
-    "claim": "A failed pack preserves an existing casefile and leaves no temporary archive.",
+    "claim": "A failed pack preserves an existing casefile and leaves no temporary archive; --force replaces that casefile.",
     "where": "landing install, README",
     "test": "npm run test:e2e -- --grep '@claim:atomic-output'",
-    "sandbox": "seed an existing casefile; run pack without --force; compare bytes and directory entries"
+    "sandbox": "seed an existing casefile; run pack without --force and compare bytes and directory entries; rerun with --force and assert a valid replacement with no temporary file"
   },
   {
     "id": "inspect-casefile",

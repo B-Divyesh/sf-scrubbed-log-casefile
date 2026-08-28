@@ -26,8 +26,17 @@ test('@claim:browser-local landing and demo scrub without sending or saving inpu
   await page.locator('#raw-log').fill(`email=${landingSentinel} password=landing-secret-9f1e`);
   await page.getByRole('button', { name: 'Scrub this fragment' }).click();
   await expect(page.locator('#scrubbed-output')).not.toContainText(landingSentinel);
+  const realStorage = {
+    'sb_license:scrubbed-log-casefile': 'real-license-do-not-touch',
+    'sb_license_verdict:scrubbed-log-casefile': JSON.stringify({ valid: false, checkedAt: 0 }),
+    'casefile:real-workspace': 'real-data-do-not-touch',
+  };
+  await page.evaluate((entries) => {
+    for (const [key, value] of Object.entries(entries)) localStorage.setItem(key, value);
+  }, realStorage);
 
-  await page.goto('/demo/');
+  await page.getByRole('link', { name: 'Try it with sample data' }).click();
+  await page.waitForURL('/demo/');
   await expect(page).toHaveTitle('Demo — Scrubbed Log Casefile');
   await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
   await expect(page.locator('#scrubbed-output')).toContainText('<SECRET:');
@@ -39,7 +48,7 @@ test('@claim:browser-local landing and demo scrub without sending or saving inpu
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.locator('#raw-log')).toHaveValue(/ria@example\.com/);
 
-  for (const route of ['/', '/demo/', '/privacy/', '/terms/', '/404.html']) await page.goto(route);
+  for (const route of ['/privacy/', '/terms/', '/404.html']) await page.goto(route);
   const sentinels = [landingSentinel, demoSentinel, 'landing-secret-9f1e', 'demo-secret-7a2c'];
   expect(await page.evaluate(async (values) => {
     const cacheContents = await Promise.all((await caches.keys()).map(async (name) => {
@@ -47,12 +56,12 @@ test('@claim:browser-local landing and demo scrub without sending or saving inpu
       return Promise.all((await cache.keys()).map(async (request) => (await cache.match(request))?.text() ?? ''));
     }));
     return {
-      local: localStorage.length,
+      local: Object.fromEntries(Object.entries(localStorage)),
       session: sessionStorage.length,
       databases: await indexedDB.databases(),
       cachedSentinel: cacheContents.flat().some((body) => values.some((value) => body.includes(value))),
     };
-  }, sentinels)).toEqual({ local: 0, session: 0, databases: [], cachedSentinel: false });
+  }, sentinels)).toEqual({ local: realStorage, session: 0, databases: [], cachedSentinel: false });
   expect(requests.every((request) => new URL(request.url).origin === 'http://127.0.0.1:4173')).toBe(true);
   expect(requests.some((request) => sentinels.some((value) => request.url.includes(value) || request.postData?.includes(value)))).toBe(false);
 });

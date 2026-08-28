@@ -15,10 +15,14 @@ const previewSalt = createCaseSalt();
 
 // Keep the catalog's ?demo=1 entry point as a one-click shortcut while the
 // isolated, in-memory demo remains a real URL with its own title and banner.
-if (new URLSearchParams(window.location.search).get('demo') === '1') {
+const isDemoShortcut = new URLSearchParams(window.location.search).get('demo') === '1';
+if (isDemoShortcut) {
   window.location.replace('/demo/');
+} else {
+  initializeHome();
 }
 
+function initializeHome() {
 byId<HTMLButtonElement>('scrub-button').addEventListener('click', () => {
   if (!rawLog.value.trim()) {
     output.textContent = 'Nothing to scrub yet.';
@@ -140,3 +144,4 @@ byId<HTMLButtonElement>('download-pack').addEventListener('click', () => {
 });
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => undefined));
+}

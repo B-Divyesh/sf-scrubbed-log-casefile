@@ -146,6 +146,25 @@ fn password_is_read_from_an_environment_variable_not_a_cli_argument() {
         .success()
         .stdout(predicate::str::contains("--password-env <NAME>"))
         .stdout(predicate::str::contains("--password <").not());
+
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("app.log");
+    let output = temp.path().join("custom-variable.zip");
+    fs::write(&input, "email=custom-variable@example.com").unwrap();
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "MY_CASEFILE_PASSWORD",
+        ])
+        .env("MY_CASEFILE_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .success();
+    assert!(output.exists());
 }
 
 #[test]
@@ -423,6 +442,24 @@ fn existing_output_is_unchanged_and_failed_pack_leaves_no_temporary_archive() {
         .assert()
         .code(2);
     assert_eq!(fs::read(&output).unwrap(), b"existing archive bytes");
+    assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 2);
+
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+            "--force",
+            "--json",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", TEST_PASSWORD)
+        .assert()
+        .success();
+    assert_ne!(fs::read(&output).unwrap(), b"existing archive bytes");
     assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 2);
 }
 

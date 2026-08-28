@@ -18,7 +18,7 @@ individually from that clone. Live screenshots are under
 | Finding | Change made | Evidence |
 |---|---|---|
 | F-1-1 | Kept unproved merchant/refund statements absent from landing, README, and Terms. Retained only the fixture-tested price and pack contents. | `@claim:team-policy-pack`; live `/` and `/terms/`; 14-link live crawl. |
-| F-1-2 | Expanded one privacy regression across landing scrub, demo scrub/reset, every public route, request URLs/bodies, local/session storage, IndexedDB, and Cache Storage. | `@claim:browser-local`; live sentinel/storage audit; `live/verify.json`. |
+| F-1-2 | Expanded one privacy regression across landing scrub, the `?demo=1` transition, demo scrub/reset, every public route, request URLs/bodies, real namespace preservation, local/session storage, IndexedDB, and Cache Storage. | `@claim:browser-local`; live sentinel/storage audit; `live/verify.json`. |
 | F-1-3 | Kept the evidence figure, stamp, and caption inside both phone and desktop viewports. | `hero evidence and caption stay within…` at 390 and 1440; `live/screenshot-mobile.png`; `live/screenshot-desktop.png`. |
 | F-1-4 | Route marking now covers every same-origin route link, including footer links and the wordmark, with h1 focus and polite announcement on forward and Back. | `normal routes keep navigation…`; live Footer Terms → wordmark → Back audit. |
 | F-1-5 | Preserved the same four-link navigation on every route and kept the workflow heading in plain task language. | `normal routes keep navigation…`; five-route live crawl and axe scan. |
