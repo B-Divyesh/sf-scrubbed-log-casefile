@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://scrubbed-log-casefile.sociobot.in/sitemap.xml

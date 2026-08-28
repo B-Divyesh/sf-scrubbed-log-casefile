@@ -85,6 +85,7 @@ if (returnedLicense) {
   params.delete('license');
   const query = params.toString();
   history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
+  setUnlocked(true, 'License received. Confirming it with Sociobot…');
   void verifyLicense(returnedLicense, true);
 } else {
   const token = localStorage.getItem(licenseKey);

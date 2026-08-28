@@ -60,7 +60,7 @@ Authorization: Bearer abcdefghijklmnop</textarea>
       </section>
       <section class="section manifest" aria-labelledby="manifest-title">
         <div><p class="eyebrow">PROVENANCE WITHOUT PAYLOAD</p><h2 id="manifest-title">A receipt for every redaction.</h2><p>Review exactly which policy fired and how often. Raw matches never enter the manifest, filenames are scrubbed, and per-case salts prevent cross-archive correlation.</p></div>
-        <pre aria-label="Example manifest">{
+        <pre aria-label="Example manifest" tabindex="0">{
   "format": "scrubbed-log-casefile",
   "rule_hits": {
     "email": 14,
@@ -71,7 +71,7 @@ Authorization: Bearer abcdefghijklmnop</textarea>
       </section>
       <section class="section install" id="install" aria-labelledby="install-title">
         <div class="section-heading"><p class="eyebrow">VERSION 0.1.0 / MIT</p><h2 id="install-title">One binary. No account.</h2></div>
-        <div class="terminal"><div class="terminal-top"><span>BUILD + PACK</span><button class="text-button inverse" id="copy-command" type="button">Copy command</button></div><pre id="install-command"><code>cargo install --git https://github.com/B-Divyesh/sf-scrubbed-log-casefile
+        <div class="terminal"><div class="terminal-top"><span>BUILD + PACK</span><button class="text-button inverse" id="copy-command" type="button">Copy command</button></div><pre id="install-command" tabindex="0"><code>cargo install --git https://github.com/B-Divyesh/sf-scrubbed-log-casefile
 export CASEFILE_PASSWORD='a-long-unique-passphrase'
 casefile pack ./incident --output vendor.zip</code></pre></div>
         <div class="install-notes"><p><strong>Password stays out of arguments.</strong><br />Read from <code>CASEFILE_PASSWORD</code> or a variable you name.</p><p><strong>Failure stays atomic.</strong><br />Incomplete archives are removed; existing output is preserved unless you pass <code>--force</code>.</p></div>

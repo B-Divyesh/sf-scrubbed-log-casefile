@@ -102,3 +102,42 @@ fn encrypted_entries_decrypt_to_scrubbed_content_and_manifest() {
     assert!(manifest.contains("\"email\": 1"));
     assert!(!manifest.contains("person@example.com"));
 }
+
+#[test]
+fn documented_custom_policy_replaces_only_the_named_value_capture() {
+    let temp = tempfile::tempdir().unwrap();
+    let input = temp.path().join("tenant.log");
+    let policy = temp.path().join("casefile-policy.json");
+    let output = temp.path().join("case.zip");
+    fs::write(&input, "tenant=ABCD1234 state=retry").unwrap();
+    fs::write(
+        &policy,
+        r#"{"rules":[{"name":"tenant-id","kind":"TENANT","pattern":"tenant=(?P<value>[A-Z0-9]{8})"}]}"#,
+    )
+    .unwrap();
+    Command::cargo_bin("casefile")
+        .unwrap()
+        .args([
+            "pack",
+            input.to_str().unwrap(),
+            "--policy",
+            policy.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--password-env",
+            "CASEFILE_TEST_PASSWORD",
+        ])
+        .env("CASEFILE_TEST_PASSWORD", "correct horse battery staple")
+        .assert()
+        .success();
+
+    let mut archive = zip::ZipArchive::new(fs::File::open(output).unwrap()).unwrap();
+    let mut scrubbed = String::new();
+    archive
+        .by_name_decrypt("tenant.log", b"correct horse battery staple")
+        .unwrap()
+        .read_to_string(&mut scrubbed)
+        .unwrap();
+    assert!(scrubbed.starts_with("tenant=<TENANT:"));
+    assert!(scrubbed.ends_with(" state=retry"));
+}

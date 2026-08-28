@@ -8,6 +8,7 @@ repository = "https://github.com/B-Divyesh/sf-scrubbed-log-casefile"
 readme = "README.md"
 keywords = ["logs", "redaction", "privacy", "cli"]
 categories = ["command-line-utilities"]
+include = ["/Cargo.toml", "/Cargo.lock", "/src/**", "/tests/**", "/README.md", "/LICENSE", "/CHANGELOG.md"]
 
 [[bin]]
 name = "casefile"
