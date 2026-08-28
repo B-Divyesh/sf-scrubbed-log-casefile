@@ -1,0 +1,10 @@
+{
+  "slug": "scrubbed-log-casefile",
+  "title": "Scrubbed Log Casefile",
+  "territory": "devtools-data",
+  "user": "Engineers escalating a bug who need a useful log bundle without leaking passwords, identifiers, or configuration.",
+  "smallest_useful_product": "An offline CLI that applies named redaction policies, preserves stable placeholders across files, records which rule fired without values, and produces a shareable encrypted zip plus manifest.",
+  "artifact_class": "cli",
+  "monetization": "one-time",
+  "constraints": "Offline by default; atomic temp-file cleanup; user-owned rules; never claim complete PII detection or encrypt with a service-held key."
+}
