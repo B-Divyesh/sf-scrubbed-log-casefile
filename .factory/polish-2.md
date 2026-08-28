@@ -6,7 +6,7 @@ Work order: `scrubbed-log-casefile-polish-2`
 
 Implementation commit: `2500fc8f`
 
-Deployment: `1cf8efbf-0f1e-42be-a6e4-7f90202390a6`
+Deployment: `bc702d1f-f982-482e-a1c2-2a4c91266650`
 
 Live URL: <https://scrubbed-log-casefile.sociobot.in>
 
