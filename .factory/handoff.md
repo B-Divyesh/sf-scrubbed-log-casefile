@@ -4,7 +4,7 @@ Date: 2026-08-28 UTC
 
 Work order: `scrubbed-log-casefile-polish-2`
 
-Repair commit: `2500fc8f`
+Repair commit: `a5eb79f4`
 
 Live URL: <https://scrubbed-log-casefile.sociobot.in>
 
@@ -37,7 +37,7 @@ encrypted casefiles.” It is verb-first and 64 characters.
 
 ## Verification evidence
 
-Clean clone: `/tmp/casefile-polish2-clean.Vb3ewL/repo`.
+Final clean clone: `/tmp/casefile-polish2-final.oK8QuY/repo`.
 
 - All 21 claim commands from `.factory/claims.json`: passed independently.
 - `cargo fmt --check`: passed.
@@ -47,7 +47,7 @@ Clean clone: `/tmp/casefile-polish2-clean.Vb3ewL/repo`.
 - `npm run typecheck`; `npm run lint`: passed.
 - `npm run build`: passed and produced `dist/site`.
 - `npm run test:e2e -- --reporter=line`: 35/35 passed.
-- `cargo package`: passed; package 85.4 KiB, 22.4 KiB compressed.
+- `cargo package`: passed; package 86.5 KiB, 22.5 KiB compressed.
 - Initial home JavaScript: 2.28 KiB gzip; CSS: 3.50 KiB gzip.
 - Live Lighthouse mobile: 100 Performance, 100 Accessibility, 100 Best
   Practices, 100 SEO; LCP 1.4 s, CLS 0, TBT 20 ms.

@@ -4,14 +4,14 @@ Date: 2026-08-28 UTC
 
 Work order: `scrubbed-log-casefile-polish-2`
 
-Implementation commit: `2500fc8f`
+Implementation commit: `a5eb79f4`
 
 Deployment: `bc702d1f-f982-482e-a1c2-2a4c91266650`
 
 Live URL: <https://scrubbed-log-casefile.sociobot.in>
 
 All tests named below passed from the clean clone at
-`/tmp/casefile-polish2-clean.Vb3ewL/repo`. Every `@claim:*` test also passed
+`/tmp/casefile-polish2-final.oK8QuY/repo`. Every `@claim:*` test also passed
 individually from that clone. Live screenshots are under
 `.factory/evidence/live/`.
 
