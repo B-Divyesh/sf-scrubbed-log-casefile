@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#121512" />
+    <meta name="description" content="Turn incident logs into a locally scrubbed, encrypted casefile with stable tokens and a value-free manifest." />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>Scrubbed Log Casefile — safe incident handoffs</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div class="offline-bar" id="offline-bar" role="status" hidden>Offline. The demo still works locally; purchase verification will resume when connected.</div>
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="Scrubbed Log Casefile home"><span aria-hidden="true">[////]</span> CASEFILE</a>
+      <nav aria-label="Primary navigation"><a href="#workflow">Workflow</a><a href="#demo">Try it</a><a href="#pricing">Pricing</a><a class="nav-command" href="#install">Install</a></nav>
+    </header>
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>LOCAL / OFFLINE / ENCRYPTED</span></p>
+          <h1 id="hero-title">Useful logs.<br /><em>Unsafe values gone.</em></h1>
+          <p class="lede">Build a vendor-ready incident bundle without sending raw logs to another service. Repeated identifiers stay correlatable; secrets do not.</p>
+          <div class="hero-actions"><a class="button primary" href="#install">Install the CLI</a><a class="button secondary" href="#demo">Test the scrubber</a></div>
+          <ul class="trust-strip" aria-label="Product guarantees"><li>No telemetry</li><li>AES-256 ZIP</li><li>One binary</li></ul>
+        </div>
+        <figure class="hero-art">
+          <img src="/assets/casefile-hero.webp" width="1200" height="800" alt="Concrete evidence slab wrapped in log sheets with sensitive lines masked in moss green" fetchpriority="high" />
+          <figcaption>CASE 001 <span>structure retained / values sealed</span></figcaption>
+        </figure>
+      </section>
+      <section class="problem-band" aria-label="Product distinction"><p>Not a log drain.</p><p>Not a cloud scrubber.</p><p><strong>A handoff artifact.</strong></p></section>
+      <section class="section workflow" id="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading"><p class="eyebrow">THE CHAIN OF CUSTODY</p><h2 id="workflow-title">From raw incident to sealed case.</h2></div>
+        <ol class="steps">
+          <li><span class="step-number">01</span><div><h3>Collect locally</h3><p>Point one command at logs, traces, configs, files, or whole directories.</p></div></li>
+          <li><span class="step-number">02</span><div><h3>Scrub consistently</h3><p>Named rules replace repeated values with stable, case-scoped tokens.</p></div></li>
+          <li><span class="step-number">03</span><div><h3>Seal and hand off</h3><p>Receive an AES-256 encrypted ZIP and a manifest that records counts, never values.</p></div></li>
+        </ol>
+      </section>
+      <section class="section demo" id="demo" aria-labelledby="demo-title">
+        <div class="section-heading"><p class="eyebrow">LIVE / BROWSER-ONLY</p><h2 id="demo-title">See what survives.</h2><p>This preview never sends or stores your text. The CLI adds custom policies, directories, encryption, and a full manifest.</p></div>
+        <div class="demo-grid">
+          <div class="editor-block">
+            <div class="editor-label"><label for="raw-log">Raw incident fragment</label><button class="text-button" id="load-example" type="button">Load example</button></div>
+            <textarea id="raw-log" spellcheck="false" rows="10" aria-describedby="demo-help">2026-08-28 ERROR login failed user=ria@example.com ip=10.2.3.44
+retry user=ria@example.com
+password=hunter2
+Authorization: Bearer abcdefghijklmnop</textarea>
+            <p id="demo-help" class="hint">Recognizes common emails, IPv4 addresses, credentials, bearer tokens, and JWTs.</p>
+            <button class="button primary demo-run" id="scrub-button" type="button">Scrub this fragment</button>
+          </div>
+          <div class="editor-block output-block">
+            <div class="editor-label"><span id="output-label">Scrubbed preview</span><button class="text-button" id="copy-output" type="button" disabled>Copy result</button></div>
+            <pre id="scrubbed-output" tabindex="0" aria-labelledby="output-label">Run the scrubber to create a safe preview.</pre>
+            <div class="demo-summary" id="demo-summary" aria-live="polite">Waiting for input.</div>
+          </div>
+        </div>
+      </section>
+      <section class="section manifest" aria-labelledby="manifest-title">
+        <div><p class="eyebrow">PROVENANCE WITHOUT PAYLOAD</p><h2 id="manifest-title">A receipt for every redaction.</h2><p>Review exactly which policy fired and how often. Raw matches never enter the manifest, filenames are scrubbed, and per-case salts prevent cross-archive correlation.</p></div>
+        <pre aria-label="Example manifest">{
+  "format": "scrubbed-log-casefile",
+  "rule_hits": {
+    "email": 14,
+    "credential-assignment": 3
+  },
+  "token_scope": "this archive"
+}</pre>
+      </section>
+      <section class="section install" id="install" aria-labelledby="install-title">
+        <div class="section-heading"><p class="eyebrow">VERSION 0.1.0 / MIT</p><h2 id="install-title">One binary. No account.</h2></div>
+        <div class="terminal"><div class="terminal-top"><span>BUILD + PACK</span><button class="text-button inverse" id="copy-command" type="button">Copy command</button></div><pre id="install-command"><code>cargo install --git https://github.com/B-Divyesh/sf-scrubbed-log-casefile
+export CASEFILE_PASSWORD='a-long-unique-passphrase'
+casefile pack ./incident --output vendor.zip</code></pre></div>
+        <div class="install-notes"><p><strong>Password stays out of arguments.</strong><br />Read from <code>CASEFILE_PASSWORD</code> or a variable you name.</p><p><strong>Failure stays atomic.</strong><br />Incomplete archives are removed; existing output is preserved unless you pass <code>--force</code>.</p></div>
+      </section>
+      <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
+        <div class="section-heading"><p class="eyebrow">HONEST, INTERMITTENT PRICING</p><h2 id="pricing-title">Keep the safety core free.</h2><p>The CLI, encrypted export, custom rules, and manifest are MIT-licensed. A one-time team pack funds maintenance and adds reviewed policy starters.</p></div>
+        <div class="price-grid">
+          <article class="price-card"><p class="stamp">CORE</p><h3>Casefile CLI</h3><p class="price">$0</p><ul><li>Built-in safety rules</li><li>Unlimited local casefiles</li><li>AES-256 archive + manifest</li><li>Project-owned JSON policies</li></ul><a class="button secondary" href="#install">Install free</a></article>
+          <article class="price-card paid"><p class="stamp">TEAM PACK</p><h3>Policy starters</h3><p class="price">$19 <small>once</small></p><ul><li>AWS and Kubernetes starters</li><li>PostgreSQL and HTTP trace starters</li><li>Team policy review checklist</li><li>All future v1 template updates</li></ul><a class="button primary" href="https://api.sociobot.in/api/v1/products/scrubbed-log-casefile/checkout" id="buy-link">Buy the team pack</a><p class="merchant">Sociobot/Dodo is merchant of record. Refunds revoke the license.</p></article>
+        </div>
+        <div class="license-panel" id="license-panel">
+          <div><h3>Restore a purchase</h3><p id="license-status" role="status">No active team-pack license on this device.</p></div>
+          <form id="license-form"><label for="license-token">License token</label><div class="field-row"><input id="license-token" name="license" autocomplete="off" required /><button class="button secondary" type="submit">Verify license</button></div></form>
+          <div class="unlocked-content" id="unlocked-content" hidden><p><strong>Team pack unlocked.</strong> Download the reviewed starter bundle for AWS, Kubernetes, PostgreSQL, and HTTP traces.</p><button class="button primary" id="download-pack" type="button">Download policy pack</button></div>
+        </div>
+      </section>
+      <section class="final-cta" aria-labelledby="final-title"><p class="eyebrow">BEFORE YOU ATTACH THAT LOG</p><h2 id="final-title">Make the useful parts safe to share.</h2><a class="button primary" href="#install">Build your first casefile</a></section>
+    </main>
+    <footer><p><span aria-hidden="true">[////]</span> Scrubbed Log Casefile</p><nav aria-label="Legal and project links"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-scrubbed-log-casefile">Source</a></nav><p>Local by default. MIT licensed.</p></footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
